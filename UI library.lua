@@ -1,4 +1,23 @@
 -- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.3]
+-- Optional startup intro: execute this before initializing ModernV2.
+-- The protected call keeps the main UI usable if GitHub is unavailable.
+local __ModernV2IntroURL = "https://raw.githubusercontent.com/aseumusu-design/intro_A2/refs/heads/main/intro.lua";
+local __ModernV2Loadstring = loadstring or load;
+if type(__ModernV2Loadstring) == "function" and game and game.HttpGet then
+	local __IntroOK, __IntroError = pcall(function()
+		local __IntroSource = game:HttpGet(__ModernV2IntroURL);
+		local __IntroChunk = __ModernV2Loadstring(__IntroSource);
+		if type(__IntroChunk) ~= "function" then
+			error("intro.lua did not return executable code");
+		end;
+		__IntroChunk();
+	end);
+
+	if not __IntroOK then
+		warn("[ModernV2] Intro failed, continuing with UI: " .. tostring(__IntroError));
+	end;
+end;
+
 -- Standalone-safe bootstrap:
 -- Some executors expose getgenv but not getfenv, and some do not expose
 -- LPH_NO_VIRTUALIZE at all. Neither should prevent the UI from loading.
@@ -14794,32 +14813,94 @@ if __AutoWindowEnabled then
 	task.spawn(function()
 		local __ok, __result = pcall(function()
 			local __window = ModernV2API:CreateWindow({
-				Name = "ModernV2",
-				Content = "Modern UI Library",
+				Name = "UI Libiyari A2",
+				Content = "A2 Menu",
+				Logo = "rbxassetid://89298952427193",
 				ConfigEnabled = false,
-				Search = false,
+				Search = true,
 				Loadingscreen = false,
 				TextGradient = true,
 			});
 
-			local __tab = __window:AddTab({
-				Name = "Home",
-				Icon = "house",
+			local __DiscordLink = "https://discord.gg/pbg6g79Hp";
+
+			local __infoTab = __window:AddTab({
+				Name = "Info",
+				Icon = "circle-i",
 				Type = "Single",
 			});
 
-			local __section = __tab:AddSection({
-				Name = "Ready",
+			local __infoSection = __infoTab:AddSection({
+				Name = "A2 Information",
 				Position = "Center",
 				Box = true,
 			});
 
-			__section:AddParagraph({
-				Name = "ModernV2 loaded",
-				Content = "UI library berhasil dijalankan. Tekan RightControl untuk hide/show.",
+			__infoSection:AddImage({
+				Name = "A2 Banner",
+				Image = "117118608066997",
+				Height = 150,
+				ScaleType = Enum.ScaleType.Fit,
 			});
 
+			__infoSection:AddParagraph({
+				Name = "Discord",
+				Content = "Join Discord A2:\n" .. __DiscordLink,
+			});
+
+			__infoSection:AddButton({
+				Name = "Copy Discord Link",
+				Icon = "discord",
+				Callback = function()
+					local __Writer = setclipboard or toclipboard or set_clipboard or (syn and syn.write_clipboard);
+					if __Writer then
+						pcall(function()
+							__Writer(__DiscordLink);
+						end);
+					end;
+				end,
+			});
+
+			local function __addMenuTab(__name, __icon)
+				local __tab = __window:AddTab({
+					Name = __name,
+					Icon = __icon,
+					Type = "Single",
+				});
+
+				local __section = __tab:AddSection({
+					Name = __name,
+					Position = "Center",
+					Box = true,
+				});
+
+				__section:AddParagraph({
+					Name = __name .. " Menu",
+					Content = __name .. " menu siap digunakan.",
+				});
+
+				return __tab;
+			end;
+
+			__addMenuTab("Main", "house");
+			__addMenuTab("Aim Bot", "crosshairs");
+			__addMenuTab("Visual", "eye");
+			__addMenuTab("Kiler", "sword");
+			__addMenuTab("Teleport", "pin");
+			__addMenuTab("Player", "person");
+			__addMenuTab("Setingan", "gear");
+
+			local __menuIcon = ModernV2API:CreateMenuIcon({
+				Image = "89298952427193",
+				Size = 52,
+				IconScale = 0.82,
+				Draggable = true,
+			});
+			__window:AttachMenuIcon(__menuIcon);
+
 			ModernV2API.Window = __window;
+			ModernV2API.MenuIcon = __menuIcon;
+
 			return __window;
 		end);
 
