@@ -1,13 +1,27 @@
 -- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.3]
-do
-	local Constant = 'L'..'P'..'H'..'_NO_VIRTUALIZE';
-	getfenv()[Constant] = getfenv()[Constant] or function(f) return f end;
+-- Standalone-safe bootstrap:
+-- Some executors expose getgenv but not getfenv, and some do not expose
+-- LPH_NO_VIRTUALIZE at all. Neither should prevent the UI from loading.
+local __ModernV2Env;
+if type(getgenv) == "function" then
+	__ModernV2Env = getgenv();
+elseif type(getfenv) == "function" then
+	__ModernV2Env = getfenv(0);
+else
+	__ModernV2Env = _G;
 end;
 
+local LPH_NO_VIRTUALIZE = (type(__ModernV2Env.LPH_NO_VIRTUALIZE) == "function" and __ModernV2Env.LPH_NO_VIRTUALIZE) or function(f)
+	return f;
+end;
+__ModernV2Env.LPH_NO_VIRTUALIZE = LPH_NO_VIRTUALIZE;
+
+getgenv = getgenv or function()
+	return __ModernV2Env;
+end;
 cloneref = cloneref or function(i) return i end;
 gethui = gethui or get_hidden_gui;
 getcustomasset = getcustomasset or getsynasset;
-getgenv = getgenv or getfenv;
 
 local LOAD_ENV = LPH_NO_VIRTUALIZE(function()
 	if game:GetService('RunService'):IsStudio() then
@@ -142,6 +156,17 @@ listfiles = listfiles or getgenv().listfiles;
 isfolder = isfolder or getgenv().isfolder;
 isfile = isfile or getgenv().isfile;
 
+-- File APIs are optional in a few lightweight executors. The UI should
+-- still load; config saving simply becomes a no-op in that case.
+writefile = writefile or function() end;
+makefolder = makefolder or function() end;
+readfile = readfile or function() return nil end;
+delfolder = delfolder or function() end;
+delfile = delfile or function() end;
+listfiles = listfiles or function() return {} end;
+isfolder = isfolder or function() return false end;
+isfile = isfile or function() return false end;
+
 local ModernV2 = {};
 
 ModernV2.BuiltInRegular = Font.new('rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json',Enum.FontWeight.Regular,Enum.FontStyle.Normal);
@@ -156,7 +181,7 @@ local TextService: TextService = cloneref(game:GetService('TextService'));
 local RunService: RunService = cloneref(game:GetService('RunService'));
 local Players: Players = cloneref(game:GetService('Players'));
 local HttpService: HttpService = cloneref(game:GetService('HttpService'));
-local LocalPlayer: Player = Players.LocalPlayer;
+local LocalPlayer: Player = Players.LocalPlayer or Players.PlayerAdded:Wait();
 local CoreGui: PlayerGui = (gethui and gethui()) or (get_hidden_gui and get_hidden_gui()) or cloneref(game:FindFirstChild('CoreGui')) or cloneref(LocalPlayer.PlayerGui);
 local Mouse: Mouse = LocalPlayer:GetMouse();
 local CurrentCamera: Camera = cloneref(workspace.CurrentCamera);
@@ -252,7 +277,7 @@ function ModernV2:NormalizeIconId(iconId)
 	return iconId;
 end;
 
--- ── Icon System ──────────────────────────────────────────────────
+-- â”€â”€ Icon System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Supports:
 --   "123456"          -> rbxassetid://123456
 --   "lucide:search"   -> icon id from external lucide library
@@ -443,9 +468,9 @@ task.spawn(function()
 	end);
 end);
 
--- ┌─────────────────────────────────────────────────────────────────┐
--- │                   THEME SYSTEM (AddTheme)                       │
--- └─────────────────────────────────────────────────────────────────┘
+-- â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+-- â”‚                   THEME SYSTEM (AddTheme)                       â”‚
+-- â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 ModernV2.Themes = {};
 ModernV2.ThemeCallbacks = {};   -- list of callbacks to update live UI
@@ -507,21 +532,21 @@ function ModernV2:AddTheme(Config)
 	return theme;
 end;
 
--- ┌─────────────────────────────────────────────────────────────────┐
--- │               MENU ICON (CreateMenuIcon)                        │
--- │  • Always center-left of screen                                 │
--- │  • Round-square shape with UICorner                             │
--- │  • Auto-scales with UI scale                                    │
--- │  • Supports rbxassetid, Lucide-style icon name, or image URL    │
--- │  • Cool show/hide animations                                    │
--- │  • Color / BG / Stroke all customisable                         │
--- │  • Cannot be dragged off screen (optional drag entirely)        │
--- └─────────────────────────────────────────────────────────────────┘
+-- â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+-- â”‚               MENU ICON (CreateMenuIcon)                        â”‚
+-- â”‚  â€¢ Always center-left of screen                                 â”‚
+-- â”‚  â€¢ Round-square shape with UICorner                             â”‚
+-- â”‚  â€¢ Auto-scales with UI scale                                    â”‚
+-- â”‚  â€¢ Supports rbxassetid, Lucide-style icon name, or image URL    â”‚
+-- â”‚  â€¢ Cool show/hide animations                                    â”‚
+-- â”‚  â€¢ Color / BG / Stroke all customisable                         â”‚
+-- â”‚  â€¢ Cannot be dragged off screen (optional drag entirely)        â”‚
+-- â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 function ModernV2:CreateMenuIcon(Config)
 	Config = Config or {};
 
-	-- ── Defaults ──────────────────────────────────────────────────
+	-- â”€â”€ Defaults â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local iconSize       = Config.Size         or 48;
 	local iconImage      = Config.Image        or "";          -- rbxassetid:// OR lucide name OR URL
 	local iconScale      = tonumber(Config.IconScale or Config.Scale) or 1;
@@ -530,9 +555,9 @@ function ModernV2:CreateMenuIcon(Config)
 	local strokeColor    = Config.StrokeColor  or ModernV2.AccentColor;
 	local strokeThick    = Config.StrokeThick  or 1.5;
 	local draggable      = (Config.Draggable ~= false);       -- default true, but clamped
-	local cornerRadius   = UDim.new(0, math.floor(iconSize * 0.28)); -- ~28 % → round-square
+	local cornerRadius   = UDim.new(0, math.floor(iconSize * 0.28)); -- ~28 % â†’ round-square
 
-	-- ── Container ─────────────────────────────────────────────────
+	-- â”€â”€ Container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local IconRoot = Instance.new("Frame");
 	IconRoot.Name             = ModernV2.RandomString();
 	IconRoot.Parent           = ModernV2.ScreenGui;
@@ -557,7 +582,7 @@ function ModernV2:CreateMenuIcon(Config)
 	UIStrokeIcon.Transparency = 1;
 	UIStrokeIcon.Parent      = IconRoot;
 
-	-- ── Icon display (TextLabel for built-in / ImageLabel for image) ──
+	-- â”€â”€ Icon display (TextLabel for built-in / ImageLabel for image) â”€â”€
 	-- We keep both and show the relevant one.
 	local IconLabel = Instance.new("TextLabel");
 	IconLabel.Name                = ModernV2.RandomString();
@@ -596,7 +621,7 @@ function ModernV2:CreateMenuIcon(Config)
 	-- Shadow behind icon
 	local IconShadow = ModernV2:CreateShadow(IconRoot, true);
 
-	-- ── Internal state ────────────────────────────────────────────
+	-- â”€â”€ Internal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local MenuIconLib = {
 		Root         = IconRoot,
 		Visible      = false,
@@ -604,7 +629,7 @@ function ModernV2:CreateMenuIcon(Config)
 		_draggable   = draggable,
 	};
 
-	-- ── Helpers ───────────────────────────────────────────────────
+	-- â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local function _applyIcon(src)
 		if not src or src == "" then
 			IconLabel.Text           = "";
@@ -621,7 +646,7 @@ function ModernV2:CreateMenuIcon(Config)
 
 	_applyIcon(iconImage);
 
-	-- ── Show / Hide with smooth animations ───────────────────────
+	-- â”€â”€ Show / Hide with smooth animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local function _setIconVisible(val)
 		MenuIconLib.Visible = val;
 		local IconFallbackText = IconImage:FindFirstChild("ModernIconFallbackText");
@@ -672,7 +697,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end;
 
-	-- ── Public API ────────────────────────────────────────────────
+	-- â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 	--- Show or hide the icon
 	function MenuIconLib:SetVisible(val)
@@ -761,7 +786,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end;
 
-	-- ── Optional drag (clamped to screen, never off edge) ─────────
+	-- â”€â”€ Optional drag (clamped to screen, never off edge) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	do
 		local dragging = false;
 		local dragStart, startPos;
@@ -815,7 +840,7 @@ function ModernV2:CreateMenuIcon(Config)
 					endConn:Disconnect();
 					dragging = false;
 
-					-- Pure tap (no drag movement) → fire the real-time keybind
+					-- Pure tap (no drag movement) â†’ fire the real-time keybind
 					if not moved then
 						ModernV2:FireKeybind();
 					end;
@@ -823,7 +848,7 @@ function ModernV2:CreateMenuIcon(Config)
 			end));
 		end;
 
-	-- ── Theme live-update ─────────────────────────────────────────
+	-- â”€â”€ Theme live-update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	ModernV2:OnThemeChanged(function(theme)
 		if theme.Icon then
 			MenuIconLib:SetIconColor(theme.Icon);
@@ -833,7 +858,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end);
 
-	-- ── Settings panel (built-in, opens on right-click / long press) ─
+	-- â”€â”€ Settings panel (built-in, opens on right-click / long press) â”€
 	-- Shows size slider + color pickers inline using the existing windows
 	-- (lightweight stub; a full window.UserSettings section is the preferred path)
 
@@ -1080,10 +1105,10 @@ do
 	end);
 end;
 
--- ── FireKeybind ───────────────────────────────────────────────────
+-- â”€â”€ FireKeybind â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Simulates the UI keybind being pressed in real time.
 -- Reads Window.Keybind at call time, so it always matches whatever
--- the user has set — even if they changed it via the keybind picker.
+-- the user has set â€” even if they changed it via the keybind picker.
 -- Called by Watermark bindable blocks and the MenuIcon click.
 function ModernV2:FireKeybind()
 	if ModernV2.ActiveWindow then
@@ -2317,7 +2342,9 @@ function ModernV2:ApplyLock(Frame, isLocked, lockMessage)
 	return LockFunc;
 end;
 
-ModernV2.EnabledBlur = true;
+-- Blur uses a temporary collision group and is rejected by some executors.
+-- Keep the default reliable; callers can explicitly enable it if supported.
+ModernV2.EnabledBlur = false;
 ModernV2.BlurModuleParent = workspace.CurrentCamera;
 
 ModernV2.GetCalculatePosition = LPH_NO_VIRTUALIZE(function(planePos, planeNormal, rayOrigin, rayDirection)
@@ -2476,7 +2503,7 @@ function ModernV2:FireCallback(Callback, Context, ...)
 	return Ok, Result;
 end;
 
--- ── CaseInsensitive ───────────────────────────────────────────────
+-- â”€â”€ CaseInsensitive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Wraps any table so its methods can be called with any casing.
 -- e.g. :AddButton(), :ADDBUTTON(), :adDbUtToN() all work.
 -- Walks the raw table first (exact match), then falls back to a
@@ -4580,7 +4607,7 @@ function ModernV2:RegisiterHandler(Handler: Frame , Signal)
 		return CaseInsensitive(TextBoxLib);
 	end;
 
-	-- Alias: :AddInput() → same as :AddTextInput()
+	-- Alias: :AddInput() â†’ same as :AddTextInput()
 	handle.AddInput = handle.AddTextInput;
 
 	function handle:AddDropdown(Config)
@@ -14097,7 +14124,7 @@ function ModernV2:CreateWindow(Config)
 
 	Window:SetRender(false);
 
-	-- ── Icon Settings (built-in UserSettings section) ─────────────
+	-- â”€â”€ Icon Settings (built-in UserSettings section) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	-- Called automatically if a MenuIcon was created before this window.
 	-- Adds: Icon Size slider, Draggable toggle, Icon Colour picker.
 	function Window:_RegisterMenuIconSettings(MenuIcon)
@@ -14757,4 +14784,49 @@ function ModernV2:Window(Config)
 	return ModernV2:CreateWindow(Config);
 end;
 
-return CaseInsensitive(ModernV2);
+local ModernV2API = CaseInsensitive(ModernV2);
+
+-- This file is also intended to be executable on its own. Set
+-- getgenv().MODERNV2_AUTO_WINDOW = false before loading when the caller
+-- only wants the library object and will create its own window.
+local __AutoWindowEnabled = getgenv().MODERNV2_AUTO_WINDOW ~= false;
+if __AutoWindowEnabled then
+	task.spawn(function()
+		local __ok, __result = pcall(function()
+			local __window = ModernV2API:CreateWindow({
+				Name = "ModernV2",
+				Content = "Modern UI Library",
+				ConfigEnabled = false,
+				Search = false,
+				Loadingscreen = false,
+				TextGradient = true,
+			});
+
+			local __tab = __window:AddTab({
+				Name = "Home",
+				Icon = "house",
+				Type = "Single",
+			});
+
+			local __section = __tab:AddSection({
+				Name = "Ready",
+				Position = "Center",
+				Box = true,
+			});
+
+			__section:AddParagraph({
+				Name = "ModernV2 loaded",
+				Content = "UI library berhasil dijalankan. Tekan RightControl untuk hide/show.",
+			});
+
+			ModernV2API.Window = __window;
+			return __window;
+		end);
+
+		if not __ok then
+			warn("[ModernV2] Auto window failed: " .. tostring(__result));
+		end;
+	end);
+end;
+
+return ModernV2API;
