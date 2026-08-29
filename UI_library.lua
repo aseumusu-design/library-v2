@@ -1,4 +1,4 @@
--- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.3]
+-- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.4 - Bubble Glow]
 -- Optional startup intro: execute this before initializing ModernV2.
 -- The protected call keeps the main UI usable if GitHub is unavailable.
 local __ModernV2IntroURL = "https://raw.githubusercontent.com/aseumusu-design/intro_A2/refs/heads/main/intro.lua";
@@ -296,7 +296,7 @@ function ModernV2:NormalizeIconId(iconId)
 	return iconId;
 end;
 
--- ── Icon System ──────────────────────────────────────────────────
+-- â”€â”€ Icon System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Supports:
 --   "123456"          -> rbxassetid://123456
 --   "lucide:search"   -> icon id from external lucide library
@@ -487,9 +487,9 @@ task.spawn(function()
 	end);
 end);
 
--- ┌─────────────────────────────────────────────────────────────────┐
--- │                   THEME SYSTEM (AddTheme)                       │
--- └─────────────────────────────────────────────────────────────────┘
+-- â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+-- â”‚                   THEME SYSTEM (AddTheme)                       â”‚
+-- â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 ModernV2.Themes = {};
 ModernV2.ThemeCallbacks = {};   -- list of callbacks to update live UI
@@ -551,32 +551,32 @@ function ModernV2:AddTheme(Config)
 	return theme;
 end;
 
--- ┌─────────────────────────────────────────────────────────────────┐
--- │               MENU ICON (CreateMenuIcon)                        │
--- │  • Always center-left of screen                                 │
--- │  • Round-square shape with UICorner                             │
--- │  • Auto-scales with UI scale                                    │
--- │  • Supports rbxassetid, Lucide-style icon name, or image URL    │
--- │  • Cool show/hide animations                                    │
--- │  • Color / BG / Stroke all customisable                         │
--- │  • Cannot be dragged off screen (optional drag entirely)        │
--- └─────────────────────────────────────────────────────────────────┘
+-- â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+-- â”‚               MENU ICON (CreateMenuIcon)                        â”‚
+-- â”‚  â€¢ Always center-left of screen                                 â”‚
+-- â”‚  â€¢ Round-square shape with UICorner                             â”‚
+-- â”‚  â€¢ Auto-scales with UI scale                                    â”‚
+-- â”‚  â€¢ Supports rbxassetid, Lucide-style icon name, or image URL    â”‚
+-- â”‚  â€¢ Cool show/hide animations                                    â”‚
+-- â”‚  â€¢ Color / BG / Stroke all customisable                         â”‚
+-- â”‚  â€¢ Cannot be dragged off screen (optional drag entirely)        â”‚
+-- â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 function ModernV2:CreateMenuIcon(Config)
 	Config = Config or {};
 
-	-- ── Defaults ──────────────────────────────────────────────────
+	-- â”€â”€ Defaults â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local iconSize       = Config.Size         or 48;
 	local iconImage      = Config.Image        or "";          -- rbxassetid:// OR lucide name OR URL
 	local iconScale      = tonumber(Config.IconScale or Config.Scale) or 1;
 	local iconColor      = Config.IconColor    or Color3.fromRGB(255,255,255);
 	local bgColor        = Config.BGColor      or Color3.fromRGB(20,22,27);
 	local strokeColor    = Config.StrokeColor  or ModernV2.AccentColor;
-	local strokeThick    = Config.StrokeThick  or 1.5;
+	local strokeThick    = Config.StrokeThick  or 3.5;
 	local draggable      = (Config.Draggable ~= false);       -- default true, but clamped
-	local cornerRadius   = UDim.new(0, math.floor(iconSize * 0.28)); -- ~28 % → round-square
+	local cornerRadius   = UDim.new(0, math.floor(iconSize * 0.28)); -- ~28 % â†’ round-square
 
-	-- ── Container ─────────────────────────────────────────────────
+	-- â”€â”€ Container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local IconRoot = Instance.new("Frame");
 	IconRoot.Name             = ModernV2.RandomString();
 	IconRoot.Parent           = ModernV2.ScreenGui;
@@ -601,7 +601,7 @@ function ModernV2:CreateMenuIcon(Config)
 	UIStrokeIcon.Transparency = 1;
 	UIStrokeIcon.Parent      = IconRoot;
 
-	-- ── Icon display (TextLabel for built-in / ImageLabel for image) ──
+	-- â”€â”€ Icon display (TextLabel for built-in / ImageLabel for image) â”€â”€
 	-- We keep both and show the relevant one.
 	local IconLabel = Instance.new("TextLabel");
 	IconLabel.Name                = ModernV2.RandomString();
@@ -637,10 +637,16 @@ function ModernV2:CreateMenuIcon(Config)
 	UICornerImg.CornerRadius = UDim.new(0.15, 0);
 	UICornerImg.Parent       = IconImage;
 
-	-- Shadow behind icon
-	local IconShadow = ModernV2:CreateShadow(IconRoot, true);
+	-- Strong blue ring with a dark, slowly pulsing halo behind the bubble.
+	local IconShadow = ModernV2:CreateShadow(
+		IconRoot,
+		true,
+		Color3.fromRGB(0, 0, 0),
+		0.78,
+		true
+	);
 
-	-- ── Internal state ────────────────────────────────────────────
+	-- â”€â”€ Internal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local MenuIconLib = {
 		Root         = IconRoot,
 		Visible      = false,
@@ -648,7 +654,7 @@ function ModernV2:CreateMenuIcon(Config)
 		_draggable   = draggable,
 	};
 
-	-- ── Helpers ───────────────────────────────────────────────────
+	-- â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local function _applyIcon(src)
 		if not src or src == "" then
 			IconLabel.Text           = "";
@@ -665,7 +671,7 @@ function ModernV2:CreateMenuIcon(Config)
 
 	_applyIcon(iconImage);
 
-	-- ── Show / Hide with smooth animations ───────────────────────
+	-- â”€â”€ Show / Hide with smooth animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local function _setIconVisible(val)
 		MenuIconLib.Visible = val;
 		local IconFallbackText = IconImage:FindFirstChild("ModernIconFallbackText");
@@ -678,7 +684,7 @@ function ModernV2:CreateMenuIcon(Config)
 				Position = UDim2.new(0, 15, 0.5, 0),
 			});
 			ModernV2.PlayAnimate(UIStrokeIcon, SlowyTween, {
-				Transparency = 0.25,
+				Transparency = 0.00,
 			});
 			ModernV2.PlayAnimate(IconLabel, VSlowTween, {
 				TextTransparency = 0,
@@ -716,7 +722,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end;
 
-	-- ── Public API ────────────────────────────────────────────────
+	-- â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 	--- Show or hide the icon
 	function MenuIconLib:SetVisible(val)
@@ -805,7 +811,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end;
 
-	-- ── Optional drag (clamped to screen, never off edge) ─────────
+	-- â”€â”€ Optional drag (clamped to screen, never off edge) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	do
 		local dragging = false;
 		local dragStart, startPos;
@@ -859,7 +865,7 @@ function ModernV2:CreateMenuIcon(Config)
 					endConn:Disconnect();
 					dragging = false;
 
-					-- Pure tap (no drag movement) → fire the real-time keybind
+					-- Pure tap (no drag movement) â†’ fire the real-time keybind
 					if not moved then
 						ModernV2:FireKeybind();
 					end;
@@ -867,7 +873,7 @@ function ModernV2:CreateMenuIcon(Config)
 			end));
 		end;
 
-	-- ── Theme live-update ─────────────────────────────────────────
+	-- â”€â”€ Theme live-update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	ModernV2:OnThemeChanged(function(theme)
 		if theme.Icon then
 			MenuIconLib:SetIconColor(theme.Icon);
@@ -877,7 +883,7 @@ function ModernV2:CreateMenuIcon(Config)
 		end;
 	end);
 
-	-- ── Settings panel (built-in, opens on right-click / long press) ─
+	-- â”€â”€ Settings panel (built-in, opens on right-click / long press) â”€
 	-- Shows size slider + color pickers inline using the existing windows
 	-- (lightweight stub; a full window.UserSettings section is the preferred path)
 
@@ -1124,10 +1130,10 @@ do
 	end);
 end;
 
--- ── FireKeybind ───────────────────────────────────────────────────
+-- â”€â”€ FireKeybind â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Simulates the UI keybind being pressed in real time.
 -- Reads Window.Keybind at call time, so it always matches whatever
--- the user has set — even if they changed it via the keybind picker.
+-- the user has set â€” even if they changed it via the keybind picker.
 -- Called by Watermark bindable blocks and the MenuIcon click.
 function ModernV2:FireKeybind()
 	if ModernV2.ActiveWindow then
@@ -2522,7 +2528,7 @@ function ModernV2:FireCallback(Callback, Context, ...)
 	return Ok, Result;
 end;
 
--- ── CaseInsensitive ───────────────────────────────────────────────
+-- â”€â”€ CaseInsensitive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Wraps any table so its methods can be called with any casing.
 -- e.g. :AddButton(), :ADDBUTTON(), :adDbUtToN() all work.
 -- Walks the raw table first (exact match), then falls back to a
@@ -2554,8 +2560,10 @@ function ModernV2:RollingEffect(parent)
 	return UIGradient;
 end;
 
-function ModernV2:CreateShadow(parent , RollingEffect)
+function ModernV2:CreateShadow(parent , RollingEffect, ShadowColor, ShadowTransparency, Pulse)
 	local Shadow = {};
+	local shadowColor = ShadowColor or Color3.fromRGB(255, 255, 255);
+	local shadowTransparency = tonumber(ShadowTransparency) or 0.900;
 
 	local UIShadowSafe85 = Instance.new("UIStroke")
 	local UIShadowSafe65 = Instance.new("UIStroke")
@@ -2563,22 +2571,27 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 	local UIShadowSafe45 = Instance.new("UIStroke")
 
 	UIShadowSafe85.Thickness = 6.000
+	UIShadowSafe85.Color = shadowColor
 	UIShadowSafe85.Transparency = 1
 	UIShadowSafe85.Parent = parent
 
 	UIShadowSafe65.Thickness = 5.000
+	UIShadowSafe65.Color = shadowColor
 	UIShadowSafe65.Transparency = 1
 	UIShadowSafe65.Parent = parent
 
 	UIShadowSafe50.Thickness = 4.000
+	UIShadowSafe50.Color = shadowColor
 	UIShadowSafe50.Transparency = 1
 	UIShadowSafe50.Parent = parent
 
 	UIShadowSafe45.Thickness = 3.000
+	UIShadowSafe45.Color = shadowColor
 	UIShadowSafe45.Transparency = 1
 	UIShadowSafe45.Parent = parent
 
 	local RollingEffectThread;
+	local PulseThread;
 	local r1,r2,r3,r4;
 
 	if RollingEffect then
@@ -2593,22 +2606,26 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 			task.cancel(RollingEffectThread);
 			RollingEffectThread = nil;
 		end;
+		if PulseThread then
+			task.cancel(PulseThread);
+			PulseThread = nil;
+		end;
 
 		if value then
 			ModernV2.PlayAnimate(UIShadowSafe85 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe65 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe50 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe45 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			if RollingEffect then
@@ -2629,6 +2646,32 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 
 						ModernV2.PlayAnimate(r4 , SlowyTween , {
 							Rotation = r4.Rotation + level
+						});
+					end;
+				end);
+			end;
+
+			if Pulse then
+				PulseThread = task.spawn(function()
+					local pulseStrong = false;
+					while true do
+						task.wait(0.7);
+						pulseStrong = not pulseStrong;
+						local targetTransparency = pulseStrong
+							and math.max(0, shadowTransparency - 0.20)
+							or math.min(1, shadowTransparency + 0.08);
+
+						ModernV2.PlayAnimate(UIShadowSafe85 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe65 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe50 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe45 , SlowyTween , {
+							Transparency = targetTransparency
 						});
 					end;
 				end);
@@ -4626,7 +4669,7 @@ function ModernV2:RegisiterHandler(Handler: Frame , Signal)
 		return CaseInsensitive(TextBoxLib);
 	end;
 
-	-- Alias: :AddInput() → same as :AddTextInput()
+	-- Alias: :AddInput() â†’ same as :AddTextInput()
 	handle.AddInput = handle.AddTextInput;
 
 	function handle:AddDropdown(Config)
@@ -14143,7 +14186,7 @@ function ModernV2:CreateWindow(Config)
 
 	Window:SetRender(false);
 
-	-- ── Icon Settings (built-in UserSettings section) ─────────────
+	-- â”€â”€ Icon Settings (built-in UserSettings section) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	-- Called automatically if a MenuIcon was created before this window.
 	-- Adds: Icon Size slider, Draggable toggle, Icon Colour picker.
 	function Window:_RegisterMenuIconSettings(MenuIcon)
@@ -14287,8 +14330,10 @@ function ModernV2:CreateNotification()
 		UICorner.CornerRadius = UDim.new(0, 10)
 		UICorner.Parent = NotifyFrame
 
-		UIStroke.Transparency = 0.650
-		UIStroke.Color = Color3.fromRGB(45, 48, 58)
+		-- Make the notification bubble border thicker and clearly visible.
+		UIStroke.Thickness = 3.000
+		UIStroke.Transparency = 0.100
+		UIStroke.Color = ModernV2.AccentColor
 		UIStroke.Parent = NotifyFrame
 
 		LogoImage.Name = ModernV2.RandomString();
@@ -14827,9 +14872,9 @@ if __AutoWindowEnabled then
 			end;
 
 			local __window = ModernV2API:CreateWindow({
-				Name = "UI Libiyari A2",
-				Content = "A2 Menu",
-				Logo = "rbxassetid://89298952427193",
+				Name = "A2",
+				Content = "A2",
+				Logo = "rbxassetid://126710436488213",
 				ConfigEnabled = false,
 				Search = true,
 				Loadingscreen = false,
@@ -14906,8 +14951,10 @@ if __AutoWindowEnabled then
 
 			local __menuIcon = ModernV2API:CreateMenuIcon({
 				Image = "126710436488213",
-				Size = 52,
-				IconScale = 0.82,
+				Size = 48,
+				IconScale = 0.76,
+				StrokeColor = Color3.fromRGB(78, 127, 252),
+				StrokeThick = 3.5,
 				Draggable = true,
 			});
 			__window:AttachMenuIcon(__menuIcon);
