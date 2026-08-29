@@ -572,7 +572,7 @@ function ModernV2:CreateMenuIcon(Config)
 	local iconColor      = Config.IconColor    or Color3.fromRGB(255,255,255);
 	local bgColor        = Config.BGColor      or Color3.fromRGB(20,22,27);
 	local strokeColor    = Config.StrokeColor  or ModernV2.AccentColor;
-	local strokeThick    = Config.StrokeThick  or 1.5;
+	local strokeThick    = Config.StrokeThick  or 3.5;
 	local draggable      = (Config.Draggable ~= false);       -- default true, but clamped
 	local cornerRadius   = UDim.new(0, math.floor(iconSize * 0.28)); -- ~28 % â†’ round-square
 
@@ -637,8 +637,14 @@ function ModernV2:CreateMenuIcon(Config)
 	UICornerImg.CornerRadius = UDim.new(0.15, 0);
 	UICornerImg.Parent       = IconImage;
 
-	-- Shadow behind icon
-	local IconShadow = ModernV2:CreateShadow(IconRoot, true);
+	-- Strong blue ring with a dark, slowly pulsing halo behind the bubble.
+	local IconShadow = ModernV2:CreateShadow(
+		IconRoot,
+		true,
+		Color3.fromRGB(0, 0, 0),
+		0.78,
+		true
+	);
 
 	-- â”€â”€ Internal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	local MenuIconLib = {
@@ -678,7 +684,7 @@ function ModernV2:CreateMenuIcon(Config)
 				Position = UDim2.new(0, 15, 0.5, 0),
 			});
 			ModernV2.PlayAnimate(UIStrokeIcon, SlowyTween, {
-				Transparency = 0.25,
+				Transparency = 0.00,
 			});
 			ModernV2.PlayAnimate(IconLabel, VSlowTween, {
 				TextTransparency = 0,
@@ -2554,8 +2560,10 @@ function ModernV2:RollingEffect(parent)
 	return UIGradient;
 end;
 
-function ModernV2:CreateShadow(parent , RollingEffect)
+function ModernV2:CreateShadow(parent , RollingEffect, ShadowColor, ShadowTransparency, Pulse)
 	local Shadow = {};
+	local shadowColor = ShadowColor or Color3.fromRGB(255, 255, 255);
+	local shadowTransparency = tonumber(ShadowTransparency) or 0.900;
 
 	local UIShadowSafe85 = Instance.new("UIStroke")
 	local UIShadowSafe65 = Instance.new("UIStroke")
@@ -2563,22 +2571,27 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 	local UIShadowSafe45 = Instance.new("UIStroke")
 
 	UIShadowSafe85.Thickness = 6.000
+	UIShadowSafe85.Color = shadowColor
 	UIShadowSafe85.Transparency = 1
 	UIShadowSafe85.Parent = parent
 
 	UIShadowSafe65.Thickness = 5.000
+	UIShadowSafe65.Color = shadowColor
 	UIShadowSafe65.Transparency = 1
 	UIShadowSafe65.Parent = parent
 
 	UIShadowSafe50.Thickness = 4.000
+	UIShadowSafe50.Color = shadowColor
 	UIShadowSafe50.Transparency = 1
 	UIShadowSafe50.Parent = parent
 
 	UIShadowSafe45.Thickness = 3.000
+	UIShadowSafe45.Color = shadowColor
 	UIShadowSafe45.Transparency = 1
 	UIShadowSafe45.Parent = parent
 
 	local RollingEffectThread;
+	local PulseThread;
 	local r1,r2,r3,r4;
 
 	if RollingEffect then
@@ -2593,22 +2606,26 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 			task.cancel(RollingEffectThread);
 			RollingEffectThread = nil;
 		end;
+		if PulseThread then
+			task.cancel(PulseThread);
+			PulseThread = nil;
+		end;
 
 		if value then
 			ModernV2.PlayAnimate(UIShadowSafe85 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe65 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe50 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			ModernV2.PlayAnimate(UIShadowSafe45 , SlowyTween , {
-				Transparency = 0.900
+				Transparency = shadowTransparency
 			})
 
 			if RollingEffect then
@@ -2629,6 +2646,32 @@ function ModernV2:CreateShadow(parent , RollingEffect)
 
 						ModernV2.PlayAnimate(r4 , SlowyTween , {
 							Rotation = r4.Rotation + level
+						});
+					end;
+				end);
+			end;
+
+			if Pulse then
+				PulseThread = task.spawn(function()
+					local pulseStrong = false;
+					while true do
+						task.wait(0.7);
+						pulseStrong = not pulseStrong;
+						local targetTransparency = pulseStrong
+							and math.max(0, shadowTransparency - 0.20)
+							or math.min(1, shadowTransparency + 0.08);
+
+						ModernV2.PlayAnimate(UIShadowSafe85 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe65 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe50 , SlowyTween , {
+							Transparency = targetTransparency
+						});
+						ModernV2.PlayAnimate(UIShadowSafe45 , SlowyTween , {
+							Transparency = targetTransparency
 						});
 					end;
 				end);
