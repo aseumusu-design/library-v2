@@ -1,4 +1,4 @@
--- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.4 - Bubble Glow]
+-- [ModernV2] | [Modified By Team Luaplat] | [Version : 0.2.5 - Stable Bubble Glow]
 -- Optional startup intro: execute this before initializing ModernV2.
 -- The protected call keeps the main UI usable if GitHub is unavailable.
 local __ModernV2IntroURL = "https://raw.githubusercontent.com/aseumusu-design/intro_A2/refs/heads/main/intro.lua";
@@ -601,6 +601,14 @@ function ModernV2:CreateMenuIcon(Config)
 	UIStrokeIcon.Transparency = 1;
 	UIStrokeIcon.Parent      = IconRoot;
 
+	-- A stable outer blue ring. Only the black halo pulses, so the blue
+	-- outline stays solid instead of blinking with the shadow animation.
+	local UIStrokeGlow = Instance.new("UIStroke");
+	UIStrokeGlow.Color       = strokeColor;
+	UIStrokeGlow.Thickness   = math.max(strokeThick * 2, 6);
+	UIStrokeGlow.Transparency = 1;
+	UIStrokeGlow.Parent      = IconRoot;
+
 	-- â”€â”€ Icon display (TextLabel for built-in / ImageLabel for image) â”€â”€
 	-- We keep both and show the relevant one.
 	local IconLabel = Instance.new("TextLabel");
@@ -637,13 +645,31 @@ function ModernV2:CreateMenuIcon(Config)
 	UICornerImg.CornerRadius = UDim.new(0.15, 0);
 	UICornerImg.Parent       = IconImage;
 
+	-- Separate halo layer so the black pulse never covers or flickers
+	-- through the solid blue ring around the bubble.
+	local IconHalo = Instance.new("Frame");
+	IconHalo.Name = ModernV2.RandomString();
+	IconHalo.Parent = IconRoot;
+	IconHalo.AnchorPoint = Vector2.new(0.5, 0.5);
+	IconHalo.BackgroundTransparency = 1;
+	IconHalo.BorderSizePixel = 0;
+	IconHalo.Position = UDim2.fromScale(0.5, 0.5);
+	IconHalo.Size = UDim2.new(1, 22, 1, 22);
+	IconHalo.ZIndex = 19;
+	IconHalo.ClipsDescendants = false;
+
+	local IconHaloCorner = Instance.new("UICorner");
+	IconHaloCorner.CornerRadius = UDim.new(0, math.floor(iconSize * 0.28) + 11);
+	IconHaloCorner.Parent = IconHalo;
+
 	-- Strong blue ring with a dark, slowly pulsing halo behind the bubble.
 	local IconShadow = ModernV2:CreateShadow(
-		IconRoot,
+		IconHalo,
 		true,
 		Color3.fromRGB(0, 0, 0),
 		0.78,
-		true
+		true,
+		1.75
 	);
 
 	-- â”€â”€ Internal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -686,6 +712,9 @@ function ModernV2:CreateMenuIcon(Config)
 			ModernV2.PlayAnimate(UIStrokeIcon, SlowyTween, {
 				Transparency = 0.00,
 			});
+			ModernV2.PlayAnimate(UIStrokeGlow, SlowyTween, {
+				Transparency = 0.48,
+			});
 			ModernV2.PlayAnimate(IconLabel, VSlowTween, {
 				TextTransparency = 0,
 			});
@@ -705,6 +734,9 @@ function ModernV2:CreateMenuIcon(Config)
 				Position = UDim2.new(0, -iconSize - 10, 0.5, 0),
 			});
 			ModernV2.PlayAnimate(UIStrokeIcon, SlowyTween, {
+				Transparency = 1,
+			});
+			ModernV2.PlayAnimate(UIStrokeGlow, SlowyTween, {
 				Transparency = 1,
 			});
 			ModernV2.PlayAnimate(IconLabel, SlowyTween, {
@@ -765,11 +797,13 @@ function ModernV2:CreateMenuIcon(Config)
 	function MenuIconLib:SetStrokeColor(c3)
 		strokeColor = c3;
 		UIStrokeIcon.Color = c3;
+		UIStrokeGlow.Color = c3;
 	end;
 
 	--- Change stroke thickness
 	function MenuIconLib:SetStrokeThick(t)
 		UIStrokeIcon.Thickness = t;
+		UIStrokeGlow.Thickness = math.max(t * 2, 6);
 	end;
 
 	--- Resize the icon (also adjusts corner radius)
@@ -2560,32 +2594,33 @@ function ModernV2:RollingEffect(parent)
 	return UIGradient;
 end;
 
-function ModernV2:CreateShadow(parent , RollingEffect, ShadowColor, ShadowTransparency, Pulse)
+function ModernV2:CreateShadow(parent , RollingEffect, ShadowColor, ShadowTransparency, Pulse, ThicknessScale)
 	local Shadow = {};
 	local shadowColor = ShadowColor or Color3.fromRGB(255, 255, 255);
 	local shadowTransparency = tonumber(ShadowTransparency) or 0.900;
+	local thicknessScale = tonumber(ThicknessScale) or 1;
 
 	local UIShadowSafe85 = Instance.new("UIStroke")
 	local UIShadowSafe65 = Instance.new("UIStroke")
 	local UIShadowSafe50 = Instance.new("UIStroke")
 	local UIShadowSafe45 = Instance.new("UIStroke")
 
-	UIShadowSafe85.Thickness = 6.000
+	UIShadowSafe85.Thickness = 6.000 * thicknessScale
 	UIShadowSafe85.Color = shadowColor
 	UIShadowSafe85.Transparency = 1
 	UIShadowSafe85.Parent = parent
 
-	UIShadowSafe65.Thickness = 5.000
+	UIShadowSafe65.Thickness = 5.000 * thicknessScale
 	UIShadowSafe65.Color = shadowColor
 	UIShadowSafe65.Transparency = 1
 	UIShadowSafe65.Parent = parent
 
-	UIShadowSafe50.Thickness = 4.000
+	UIShadowSafe50.Thickness = 4.000 * thicknessScale
 	UIShadowSafe50.Color = shadowColor
 	UIShadowSafe50.Transparency = 1
 	UIShadowSafe50.Parent = parent
 
-	UIShadowSafe45.Thickness = 3.000
+	UIShadowSafe45.Thickness = 3.000 * thicknessScale
 	UIShadowSafe45.Color = shadowColor
 	UIShadowSafe45.Transparency = 1
 	UIShadowSafe45.Parent = parent
