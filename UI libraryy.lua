@@ -14287,8 +14287,10 @@ function ModernV2:CreateNotification()
 		UICorner.CornerRadius = UDim.new(0, 10)
 		UICorner.Parent = NotifyFrame
 
-		UIStroke.Transparency = 0.650
-		UIStroke.Color = Color3.fromRGB(45, 48, 58)
+		-- Make the notification bubble border thicker and clearly visible.
+		UIStroke.Thickness = 3.000
+		UIStroke.Transparency = 0.100
+		UIStroke.Color = ModernV2.AccentColor
 		UIStroke.Parent = NotifyFrame
 
 		LogoImage.Name = ModernV2.RandomString();
@@ -14827,9 +14829,9 @@ if __AutoWindowEnabled then
 			end;
 
 			local __window = ModernV2API:CreateWindow({
-				Name = "UI Libiyari A2",
-				Content = "A2 Menu",
-				Logo = "rbxassetid://89298952427193",
+				Name = "A2",
+				Content = "A2",
+				Logo = "rbxassetid://126710436488213",
 				ConfigEnabled = false,
 				Search = true,
 				Loadingscreen = false,
@@ -14906,8 +14908,9 @@ if __AutoWindowEnabled then
 
 			local __menuIcon = ModernV2API:CreateMenuIcon({
 				Image = "126710436488213",
-				Size = 52,
-				IconScale = 0.82,
+				Size = 48,
+				IconScale = 0.76,
+				StrokeThick = 0.7,
 				Draggable = true,
 			});
 			__window:AttachMenuIcon(__menuIcon);
