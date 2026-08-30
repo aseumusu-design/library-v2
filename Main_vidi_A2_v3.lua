@@ -1,5 +1,5 @@
 --========================================================--
---         TPS_VD_Auto_Generator.lua                      --
+--         TPS_VD_Auto_Generator.lua (FIXED)             --
 --========================================================--
 
 local Players = game:GetService("Players")
@@ -16,11 +16,10 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local Enabled = false
 local Mode = "SUCCESS" -- SUCCESS, NEUTRAL, INSTANT
-local TriggerDelay = 0.035
+local TriggerDelay = 0.05
 local LastTrigger = 0
 local Busy = false
 
--- Variabel penampung parameter asli dari game (generator & generatorPoint)
 local CurrentGenerator = nil
 local CurrentGeneratorPoint = nil
 
@@ -36,7 +35,7 @@ pcall(function()
 end)
 
 --========================================================--
--- UI SETUP (SEDERHANA: ScreenGui, Frame, TextButton)
+-- UI SETUP
 --========================================================--
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -76,7 +75,7 @@ Title.TextSize = 14
 Title.Font = Enum.Font.GothamBold
 Title.Parent = Main
 
--- Toggle Button (AUTO GENERATOR : OFF / ON)
+-- Toggle Button
 local Toggle = Instance.new("TextButton")
 Toggle.Size = UDim2.new(1, -20, 0, 34)
 Toggle.Position = UDim2.new(0, 10, 0, 38)
@@ -92,7 +91,7 @@ local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(0, 7)
 ToggleCorner.Parent = Toggle
 
--- Mode Button (SUCCESS / NEUTRAL / INSTANT)
+-- Mode Button
 local ModeButton = Instance.new("TextButton")
 ModeButton.Size = UDim2.new(1, -20, 0, 34)
 ModeButton.Position = UDim2.new(0, 10, 0, 78)
@@ -152,7 +151,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --========================================================--
--- REFERENCES & EVENT LISTENER CAPTURE
+-- REFERENCES & EVENT CAPTURE
 --========================================================--
 
 local SkillCheckPromptGui = nil
@@ -189,16 +188,15 @@ end
 
 RefreshReferences()
 
--- Menangkap argumen (generator & generatorPoint) dari event asli game secara diam-diam
 pcall(function()
 	local GeneratorEvent = ReplicatedStorage.Remotes.Generator:WaitForChild("SkillCheckEvent")
 	GeneratorEvent.OnClientEvent:Connect(function(gen, genPoint)
 		CurrentGenerator = gen
 		CurrentGeneratorPoint = genPoint
+		Busy = false -- Reset status sibuk saat skill check baru mulai
 	end)
 end)
 
--- Loop background untuk menjaga referensi tetap aman jika character reset/respawn
 task.spawn(function()
 	while ScreenGui.Parent do
 		if not Check or not Line or not Goal or not ActionButton then
@@ -209,7 +207,7 @@ task.spawn(function()
 end)
 
 --========================================================--
--- TRIGGER ACTION ASLI & FIRE SERVER
+-- EXECUTE ACTION
 --========================================================--
 
 local function ExecuteAction(resultType, scoreValue)
@@ -220,14 +218,12 @@ local function ExecuteAction(resultType, scoreValue)
 	Busy = true
 	LastTrigger = Now
 
-	-- 1. Gunakan tombol action asli game untuk memicu interaksi visual/audio asli
 	pcall(function()
 		if ActionButton and ActionButton:IsA("GuiButton") then
 			ActionButton:Activate()
 		end
 	end)
 
-	-- 2. Fire server menggunakan remote asli game dengan parameter lengkap
 	pcall(function()
 		if SkillCheckResultEvent then
 			SkillCheckResultEvent:FireServer(
@@ -239,31 +235,45 @@ local function ExecuteAction(resultType, scoreValue)
 		end
 	end)
 
-	task.delay(0.08, function()
+	task.delay(0.15, function()
 		Busy = false
 	end)
 end
 
 --========================================================--
--- RUNSERVICE SCANNER (LOGIKA UTAMA)
+-- RUNSERVICE SCANNER
 --========================================================--
 
+local LastVisibleState = false
+
 RunService.RenderStepped:Connect(function()
-	if not Enabled then return end
+	if not Enabled then 
+		LastVisibleState = false
+		return 
+	end
+	
 	if not Check or not Line or not Goal then return end
-	if not Check.Visible then return end
+	
+	local IsVisible = Check.Visible
+
+	if IsVisible and not LastVisibleState then
+		-- Begitu skill check muncul di layar
+		Busy = false
+	end
+	LastVisibleState = IsVisible
+
+	if not IsVisible then return end
+	if Busy then return end
 
 	local LineRot = tonumber(Line.Rotation) or 0
 	local GoalRot = tonumber(Goal.Rotation) or 0
 
-	-- Zona Sesuai Ketentuan:
 	local SuccessMin = GoalRot + 102
 	local SuccessMax = GoalRot + 116
 	local NeutralMin = GoalRot + 116
 	local NeutralMax = GoalRot + 159
 
 	if Mode == "INSTANT" then
-		-- Mode Instant: Langsung atur Line ke titik tengah sukses (GoalRot + 109)
 		Line.Rotation = GoalRot + 109
 		ExecuteAction("success", 1)
 
@@ -280,7 +290,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --========================================================--
--- UI INTERACTION & EVENT HANDLERS
+-- UI HANDLERS
 --========================================================--
 
 local function UpdateUI()
@@ -317,13 +327,11 @@ ModeButton.MouseButton1Click:Connect(function()
 	UpdateUI()
 end)
 
--- Dukungan penuh saat Respawn / Character Added
 LocalPlayer.CharacterAdded:Connect(function()
 	Busy = false
 	task.wait(1)
 	RefreshReferences()
 end)
 
--- Inisialisasi awal UI
 UpdateUI()
-print("TPS_VD_Auto_Generator.lua Loaded Successfully!")
+print("TPS_VD_Auto_Generator Fixed Loaded!")
