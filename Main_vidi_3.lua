@@ -1,5 +1,5 @@
 --[[
-  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Integrated UI)
+  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Native Integration)
 ]]
 
 local ICON = {
@@ -19,10 +19,6 @@ local ICON = {
 -- ===================== GLOBAL CONFIG & STATE =====================
 getgenv().VD = getgenv().VD or {
     AutoSkillcheck        = false,
-    AutoSkillcheckMode    = "Normal",
-    SURV_AutoParry        = false,
-    SURV_ParryMode        = "Legit",
-    SURV_ParryRange       = 12,
     AUTO_ToFAim           = true,
     AUTO_ToFTargetMode    = "Killer",
     AUTO_ToFRadius        = 150,
@@ -42,22 +38,18 @@ local CollectionService = game:GetService("CollectionService")
 local LocalPlayer       = Players.LocalPlayer
 local VD                = getgenv().VD
 
-local function GetHolder()
-    return (gethui and gethui()) or game:GetService("CoreGui")
-end
-
 local function VD_Notify(title, content, duration)
     pcall(function()
         if OrionLib and OrionLib.MakeNotification then
             OrionLib:MakeNotification({ Name = title, Content = content, Image = ICON.Logo, Time = duration or 3 })
         else
-            print("[NO MERCY] " .. title .. " - " .. content)
+            print("[NO MERCY] " + title + " - " + content)
         end
     end)
 end
 
 -- ============================================================
---  LOGIKA AUTO AIM & TARGET
+--  LOGIKA TARGET AUTO AIM (NATIVE INTEGRATION)
 -- ============================================================
 local function getAutoAimDirection(originPos)
     local closestTarget = nil
@@ -97,30 +89,6 @@ local function getAutoAimDirection(originPos)
     return nil
 end
 
--- Hooking Remote Fire untuk Twist of Fate Aimbot
-task.spawn(function()
-    pcall(function()
-        local fireRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Items"):WaitForChild("Twist of Fate"):WaitForChild("Fire", 5)
-        if fireRemote then
-            local oldFireServer
-            oldFireServer = hookmetamethod(game, "__namecall", function(self, ...)
-                local args = {...}
-                local method = getnamecallmethod()
-                if self == fireRemote and method == "FireServer" and VD.AUTO_ToFAim then
-                    local char = LocalPlayer.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local autoDir = getAutoAimDirection(char.HumanoidRootPart.Position)
-                        if autoDir then
-                            args[2] = autoDir
-                        end
-                    end
-                end
-                return oldFireServer(self, unpack(args))
-            end)
-        end
-    end)
-end)
-
 -- Loop Pengaman God Mode
 RunService.RenderStepped:Connect(function()
     if VD.GodModeEnabled then
@@ -131,7 +99,7 @@ RunService.RenderStepped:Connect(function()
                 hum.Health = hum.MaxHealth
             end
             if LocalPlayer:GetAttribute("IsDead") then
-                LocalPlayer:SetAttribute("IsDead", false)
+                LocalPlayer:GetAttribute("IsDead", false)
             end
             if char:GetAttribute("IsCarried") then
                 char:SetAttribute("IsCarried", false)
@@ -165,7 +133,7 @@ local VisualTab = Window:MakeTab({ Name = "Visual", Icon = ICON.Eye, PremiumOnly
 -- Info Tab
 local InfoSec = InfoTab:AddSection({ Name = "Tentang" })
 InfoSec:AddLabel("NO MERCY — Violence District")
-InfoSec:AddLabel("Twist of Fate Integrated Menu")
+InfoSec:AddLabel("Twist of Fate Native Controller")
 
 -- Aimbot Tab (Menu Pengaturan Auto Aim & God Mode)
 local AimSec = AimbotTab:AddSection({ Name = "Twist of Fate Controller" })
@@ -235,4 +203,4 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-VD_Notify("NO MERCY", "Violence District & Auto Aim Ready!", 4)
+VD_Notify("NO MERCY", "Violence District & Native Aim Ready!", 4)
