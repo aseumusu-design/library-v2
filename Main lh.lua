@@ -1,5 +1,5 @@
 --[[
-  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Predictive Auto Aim)
+  NO MERCY — "VIOLENCE DISTRICT" (Stable Orion UI & Predictive Auto Aim)
 ]]
 
 local ICON = {
@@ -16,14 +16,13 @@ local ICON = {
     Banner   = "rbxassetid://117118608066997",
 }
 
--- ===================== GLOBAL CONFIG & STATE =====================
 getgenv().VD = getgenv().VD or {
     AutoSkillcheck        = false,
     AUTO_ToFAim           = true,
     AUTO_ToFTargetMode    = "Killer",
     AUTO_ToFRadius        = 150,
-    AUTO_ToFPredict       = true,  -- Fitur Prediksi Gerakan Aktif
-    AUTO_ToFBulletSpeed   = 200,   -- Kecepatan estimasi peluru (bisa disesuaikan)
+    AUTO_ToFPredict       = true,
+    AUTO_ToFBulletSpeed   = 200,
     GodModeEnabled        = false,
     AUTO_Attack           = false,
     AUTO_AttackRange      = 12,
@@ -40,14 +39,14 @@ local CollectionService = game:GetService("CollectionService")
 local LocalPlayer       = Players.LocalPlayer
 local VD                = getgenv().VD
 
-local function VD_Notify(title, content, duration)
-    pcall(function()
-        if OrionLib and OrionLib.MakeNotification then
-            OrionLib:MakeNotification({ Name = title, Content = content, Image = ICON.Logo, Time = duration or 3 })
-        else
-            print("[NO MERCY] " .. title .. " - " .. content)
-        end
-    end)
+-- Cek dan muat Orion Library dengan aman
+local success, OrionLib = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/Marpiii/UiLib/refs/heads/main/source.lua"))()
+end)
+
+if not success or not OrionLib then
+    warn("[NO MERCY] Gagal memuat Orion Library!")
+    return
 end
 
 -- ============================================================
@@ -87,21 +86,16 @@ local function getAutoAimDirection(originPos)
     
     if closestTarget then
         local targetPos = closestTarget.Position
-        
-        -- Algoritma Prediksi Gerakan (Velocity Prediction)
         if VD.AUTO_ToFPredict and closestTarget.AssemblyLinearVelocity then
             local distance = (targetPos - originPos).Magnitude
             local travelTime = distance / VD.AUTO_ToFBulletSpeed
-            -- Menghitung estimasi posisi kordinat target saat peluru tiba (memprediksi arah belokan/larian)
             targetPos = targetPos + (closestTarget.AssemblyLinearVelocity * travelTime)
         end
-        
         return (targetPos - originPos).Unit
     end
     return nil
 end
 
--- Hooking Remote Fire untuk Twist of Fate Predictive Aimbot
 task.spawn(function()
     pcall(function()
         local fireRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Items"):WaitForChild("Twist of Fate"):WaitForChild("Fire", 5)
@@ -115,7 +109,7 @@ task.spawn(function()
                     if char and char:FindFirstChild("HumanoidRootPart") then
                         local autoDir = getAutoAimDirection(char.HumanoidRootPart.Position)
                         if autoDir then
-                            args[2] = autoDir -- Mengarahkan tembakan ke koordinat prediksi tujuan target
+                            args[2] = autoDir
                         end
                     end
                 end
@@ -125,7 +119,6 @@ task.spawn(function()
     end)
 end)
 
--- Loop Pengaman God Mode
 RunService.RenderStepped:Connect(function()
     if VD.GodModeEnabled then
         local char = LocalPlayer.Character
@@ -150,8 +143,6 @@ end)
 -- ============================================================
 --  ORION UI SETUP
 -- ============================================================
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marpiii/UiLib/refs/heads/main/source.lua"))()
-
 local Window = OrionLib:MakeWindow({
     Name = "NO MERCY — VIOLENCE DISTRICT",
     HidePremium = false,
@@ -171,7 +162,7 @@ local InfoSec = InfoTab:AddSection({ Name = "Tentang" })
 InfoSec:AddLabel("NO MERCY — Violence District")
 InfoSec:AddLabel("Predictive Auto Aim Integrated")
 
--- Aimbot Tab (Menu Pengaturan Prediksi & Auto Aim)
+-- Aimbot Tab
 local AimSec = AimbotTab:AddSection({ Name = "Predictive Auto Aim" })
 
 AimSec:AddToggle({ 
@@ -224,7 +215,6 @@ VisSec:AddToggle({
     Callback = function(v) Lighting.Brightness = v and 1 or 2 end 
 })
 
--- Background Loop untuk Auto Attack
 RunService.Heartbeat:Connect(function()
     if VD.AUTO_Attack and LocalPlayer.Team and LocalPlayer.Team.Name == "Killer" then
         pcall(function()
@@ -232,10 +222,10 @@ RunService.Heartbeat:Connect(function()
             if not root then return end
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Team and player.Team.Name == "Survivors" and player.Character then
-                    let tRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     if tRoot and (tRoot.Position - root.Position).Magnitude <= VD.AUTO_AttackRange then
                         local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                        local basicAtt = remotes and remotes:FindFirstChild("Attacks") and remotes.Attacks:FindFirstChild("BasicAttack")
+                        local basicAtt = remotes and remotes:FindFirstChild("Remotes") and remotes.Remotes:FindFirstChild("Attacks") -- aman
                         if basicAtt then basicAtt:FireServer(false) end
                         break
                     end
@@ -245,4 +235,9 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-VD_Notify("NO MERCY", "Predictive Auto Aim Ready!", 4)
+OrionLib:MakeNotification({
+    Name = "NO MERCY",
+    Content = "Violence District UI Loaded Successfully!",
+    Image = ICON.Logo,
+    Time = 4
+})
