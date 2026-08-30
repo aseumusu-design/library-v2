@@ -1,6 +1,5 @@
 --========================================================--
---         VD • AUTO GENERATOR v4 (DECOMPILED BASE)       --
---        NORMAL + KING SCOURGE                           --
+--         VD • AUTO GENERATOR v4 (WITH UI)               --
 --========================================================--
 
 local Players = game:GetService("Players")
@@ -12,19 +11,12 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 --========================================================--
--- REMOTES & REFERENCES (DARI DEKOMPILASI)
+-- REMOTES & REFERENCES
 --========================================================--
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local GeneratorRemotes = Remotes:WaitForChild("Generator")
-local SkillCheckEvent = GeneratorRemotes:WaitForChild("SkillCheckEvent")
 local SkillCheckResultEvent = GeneratorRemotes:WaitForChild("SkillCheckResultEvent")
-
-local KillerPerks = Remotes:WaitForChild("KillerPerks")
-local KingScourge = KillerPerks:WaitForChild("kingscourge")
-local KingScourgeStart = KingScourge:WaitForChild("KingScourgeStart")
-local KingScourgeHit = KingScourge:WaitForChild("KingScourgeHit")
-local KingScourgeEnd = KingScourge:WaitForChild("KingScourgeEnd")
 
 --========================================================--
 -- SETTINGS & STATE
@@ -49,7 +41,7 @@ pcall(function()
 end)
 
 --========================================================--
--- UI SETUP
+-- UI SETUP (MENU UTAMA)
 --========================================================--
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -61,79 +53,79 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = PlayerGui
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0,210,0,155)
-Main.Position = UDim2.new(0.5,-105,0.25,0)
-Main.BackgroundColor3 = Color3.fromRGB(22,22,27)
+Main.Size = UDim2.new(0, 210, 0, 155)
+Main.Position = UDim2.new(0.5, -105, 0.25, 0)
+Main.BackgroundColor3 = Color3.fromRGB(22, 22, 27)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Visible = true
 Main.Parent = ScreenGui
 
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0,10)
+Corner.CornerRadius = UDim.new(0, 10)
 Corner.Parent = Main
 
 local Stroke = Instance.new("UIStroke")
 Stroke.Thickness = 1.5
-Stroke.Color = Color3.fromRGB(80,80,90)
+Stroke.Color = Color3.fromRGB(80, 80, 90)
 Stroke.Parent = Main
 
 -- Title
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,-10,0,30)
-Title.Position = UDim2.new(0,5,0,3)
+Title.Size = UDim2.new(1, -10, 0, 30)
+Title.Position = UDim2.new(0, 5, 0, 3)
 Title.BackgroundTransparency = 1
 Title.Text = "AUTO GENERATOR v4"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 15
 Title.Font = Enum.Font.GothamBold
 Title.Parent = Main
 
 -- Toggle Button
 local Toggle = Instance.new("TextButton")
-Toggle.Size = UDim2.new(1,-20,0,34)
-Toggle.Position = UDim2.new(0,10,0,38)
-Toggle.BackgroundColor3 = Color3.fromRGB(45,45,52)
+Toggle.Size = UDim2.new(1, -20, 0, 34)
+Toggle.Position = UDim2.new(0, 10, 0, 38)
+Toggle.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 Toggle.BorderSizePixel = 0
 Toggle.Text = "AUTO GENERATOR : OFF"
-Toggle.TextColor3 = Color3.fromRGB(255,90,90)
+Toggle.TextColor3 = Color3.fromRGB(255, 90, 90)
 Toggle.TextSize = 13
 Toggle.Font = Enum.Font.GothamBold
 Toggle.Parent = Main
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0,7)
+ToggleCorner.CornerRadius = UDim.new(0, 7)
 ToggleCorner.Parent = Toggle
 
 -- Mode Button
 local ModeButton = Instance.new("TextButton")
-ModeButton.Size = UDim2.new(1,-20,0,34)
-ModeButton.Position = UDim2.new(0,10,0,78)
-ModeButton.BackgroundColor3 = Color3.fromRGB(45,45,52)
+ModeButton.Size = UDim2.new(1, -20, 0, 34)
+ModeButton.Position = UDim2.new(0, 10, 0, 78)
+ModeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 ModeButton.BorderSizePixel = 0
 ModeButton.Text = "MODE : SUCCESS"
-ModeButton.TextColor3 = Color3.fromRGB(255,255,255)
+ModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ModeButton.TextSize = 13
 ModeButton.Font = Enum.Font.GothamBold
 ModeButton.Parent = Main
 
 local ModeCorner = Instance.new("UICorner")
-ModeCorner.CornerRadius = UDim.new(0,7)
+ModeCorner.CornerRadius = UDim.new(0, 7)
 ModeCorner.Parent = ModeButton
 
 -- Status Label
 local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1,-20,0,25)
-Status.Position = UDim2.new(0,10,0,120)
+Status.Size = UDim2.new(1, -20, 0, 25)
+Status.Position = UDim2.new(0, 10, 0, 120)
 Status.BackgroundTransparency = 1
 Status.Text = "Status : OFF"
-Status.TextColor3 = Color3.fromRGB(170,170,170)
+Status.TextColor3 = Color3.fromRGB(170, 170, 170)
 Status.TextSize = 11
 Status.Font = Enum.Font.Gotham
 Status.Parent = Main
 
 --========================================================--
--- DRAG GUI LOGIC
+-- DRAG GUI LOGIC (BISA DIGESER)
 --========================================================--
 
 local Dragging = false
@@ -165,7 +157,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --========================================================--
--- CORE AUTOMATION LOGIC (DARI DEKOMPILASI)
+-- REFERENCES & AUTOMATION LOGIC
 --========================================================--
 
 local SkillCheckGui = PlayerGui:WaitForChild("SkillCheckPromptGui")
@@ -186,7 +178,6 @@ local function GetElements()
 	end)
 end
 
--- Fungsi Otomatisasi Berdasarkan Mode
 RunService.RenderStepped:Connect(function()
 	if not Enabled then return end
 	if not Check or not Line or not Goal then
@@ -203,9 +194,6 @@ RunService.RenderStepped:Connect(function()
 	local LineRot = tonumber(Line.Rotation) or 0
 	local GoalRot = tonumber(Goal.Rotation) or 0
 
-	-- Batas Formula dari Dekompilasi Asli:
-	-- Success: GoalRot + 102 s/d GoalRot + 116
-	-- Neutral: GoalRot + 116 s/d GoalRot + 159
 	local SuccessMin = 102 + GoalRot
 	local SuccessMax = 116 + GoalRot
 	local NeutralMin = 116 + GoalRot
@@ -215,10 +203,8 @@ RunService.RenderStepped:Connect(function()
 		Busy = true
 		LastTrigger = Now
 
-		-- Langsung tembak ke tengah Success (GoalRot + 109)
 		Line.Rotation = GoalRot + 109
 
-		-- Fire event server sesuai kondisi (Normal / Scourge bisa disesuaikan)
 		pcall(function()
 			SkillCheckResultEvent:FireServer("success", 1, 0, 0)
 		end)
@@ -258,20 +244,20 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --========================================================--
--- UI & HOTKEY HANDLERS
+-- UI BUTTON & HOTKEY HANDLERS
 --========================================================--
 
 local function UpdateUI()
 	if Enabled then
 		Toggle.Text = "AUTO GENERATOR : ON"
-		Toggle.TextColor3 = Color3.fromRGB(90,255,120)
+		Toggle.TextColor3 = Color3.fromRGB(90, 255, 120)
 		Status.Text = "Status : " .. Mode
-		Status.TextColor3 = Color3.fromRGB(100,255,130)
+		Status.TextColor3 = Color3.fromRGB(100, 255, 130)
 	else
 		Toggle.Text = "AUTO GENERATOR : OFF"
-		Toggle.TextColor3 = Color3.fromRGB(255,90,90)
+		Toggle.TextColor3 = Color3.fromRGB(255, 90, 90)
 		Status.Text = "Status : OFF"
-		Status.TextColor3 = Color3.fromRGB(170,170,170)
+		Status.TextColor3 = Color3.fromRGB(170, 170, 170)
 	end
 	ModeButton.Text = "MODE : " .. Mode
 end
@@ -284,7 +270,7 @@ end
 
 Toggle.MouseButton1Click:Connect(ToggleBot)
 
--- Tombol Hotkey INSERT untuk ON/OFF cepat
+-- Hotkey: Tekan tombol INSERT di keyboard untuk ON/OFF cepat
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
 		ToggleBot()
@@ -306,4 +292,4 @@ end)
 
 -- Initial Load
 UpdateUI()
-print("VD • Auto Generator v4 Loaded Successfully!")
+print("VD • Auto Generator v4 with UI Loaded!")
