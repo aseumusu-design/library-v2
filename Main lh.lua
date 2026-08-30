@@ -1,5 +1,5 @@
 --[[
-  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Native Integration)
+  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Predictive Auto Aim)
 ]]
 
 local ICON = {
@@ -22,6 +22,8 @@ getgenv().VD = getgenv().VD or {
     AUTO_ToFAim           = true,
     AUTO_ToFTargetMode    = "Killer",
     AUTO_ToFRadius        = 150,
+    AUTO_ToFPredict       = true,  -- Fitur Prediksi Gerakan Aktif
+    AUTO_ToFBulletSpeed   = 200,   -- Kecepatan estimasi peluru (bisa disesuaikan)
     GodModeEnabled        = false,
     AUTO_Attack           = false,
     AUTO_AttackRange      = 12,
@@ -43,13 +45,13 @@ local function VD_Notify(title, content, duration)
         if OrionLib and OrionLib.MakeNotification then
             OrionLib:MakeNotification({ Name = title, Content = content, Image = ICON.Logo, Time = duration or 3 })
         else
-            print("[NO MERCY] " + title + " - " + content)
+            print("[NO MERCY] " .. title .. " - " .. content)
         end
     end)
 end
 
 -- ============================================================
---  LOGIKA TARGET AUTO AIM (NATIVE INTEGRATION)
+--  LOGIKA PREDIKSI KORDINAT & AUTO AIM
 -- ============================================================
 local function getAutoAimDirection(originPos)
     local closestTarget = nil
@@ -84,10 +86,44 @@ local function getAutoAimDirection(originPos)
     end
     
     if closestTarget then
-        return (closestTarget.Position - originPos).Unit
+        local targetPos = closestTarget.Position
+        
+        -- Algoritma Prediksi Gerakan (Velocity Prediction)
+        if VD.AUTO_ToFPredict and closestTarget.AssemblyLinearVelocity then
+            local distance = (targetPos - originPos).Magnitude
+            local travelTime = distance / VD.AUTO_ToFBulletSpeed
+            -- Menghitung estimasi posisi kordinat target saat peluru tiba (memprediksi arah belokan/larian)
+            targetPos = targetPos + (closestTarget.AssemblyLinearVelocity * travelTime)
+        end
+        
+        return (targetPos - originPos).Unit
     end
     return nil
 end
+
+-- Hooking Remote Fire untuk Twist of Fate Predictive Aimbot
+task.spawn(function()
+    pcall(function()
+        local fireRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Items"):WaitForChild("Twist of Fate"):WaitForChild("Fire", 5)
+        if fireRemote then
+            local oldFireServer
+            oldFireServer = hookmetamethod(game, "__namecall", function(self, ...)
+                local args = {...}
+                local method = getnamecallmethod()
+                if self == fireRemote and method == "FireServer" and VD.AUTO_ToFAim then
+                    local char = LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        local autoDir = getAutoAimDirection(char.HumanoidRootPart.Position)
+                        if autoDir then
+                            args[2] = autoDir -- Mengarahkan tembakan ke koordinat prediksi tujuan target
+                        end
+                    end
+                end
+                return oldFireServer(self, unpack(args))
+            end)
+        end
+    end)
+end)
 
 -- Loop Pengaman God Mode
 RunService.RenderStepped:Connect(function()
@@ -99,7 +135,7 @@ RunService.RenderStepped:Connect(function()
                 hum.Health = hum.MaxHealth
             end
             if LocalPlayer:GetAttribute("IsDead") then
-                LocalPlayer:GetAttribute("IsDead", false)
+                LocalPlayer:SetAttribute("IsDead", false)
             end
             if char:GetAttribute("IsCarried") then
                 char:SetAttribute("IsCarried", false)
@@ -133,10 +169,10 @@ local VisualTab = Window:MakeTab({ Name = "Visual", Icon = ICON.Eye, PremiumOnly
 -- Info Tab
 local InfoSec = InfoTab:AddSection({ Name = "Tentang" })
 InfoSec:AddLabel("NO MERCY — Violence District")
-InfoSec:AddLabel("Twist of Fate Native Controller")
+InfoSec:AddLabel("Predictive Auto Aim Integrated")
 
--- Aimbot Tab (Menu Pengaturan Auto Aim & God Mode)
-local AimSec = AimbotTab:AddSection({ Name = "Twist of Fate Controller" })
+-- Aimbot Tab (Menu Pengaturan Prediksi & Auto Aim)
+local AimSec = AimbotTab:AddSection({ Name = "Predictive Auto Aim" })
 
 AimSec:AddToggle({ 
     Name = "Auto Aim : ON/OFF", 
@@ -149,6 +185,12 @@ AimSec:AddDropdown({
     Default = VD.AUTO_ToFTargetMode, 
     Options = { "Killer", "Survivor" }, 
     Callback = function(v) VD.AUTO_ToFTargetMode = type(v) == "table" and v[1] or v end 
+})
+
+AimSec:AddToggle({ 
+    Name = "Prediction (Anti-Miss/Belokan)", 
+    Default = VD.AUTO_ToFPredict, 
+    Callback = function(v) VD.AUTO_ToFPredict = v end 
 })
 
 AimSec:AddSlider({ 
@@ -190,7 +232,7 @@ RunService.Heartbeat:Connect(function()
             if not root then return end
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Team and player.Team.Name == "Survivors" and player.Character then
-                    local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    let tRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     if tRoot and (tRoot.Position - root.Position).Magnitude <= VD.AUTO_AttackRange then
                         local remotes = ReplicatedStorage:FindFirstChild("Remotes")
                         local basicAtt = remotes and remotes:FindFirstChild("Attacks") and remotes.Attacks:FindFirstChild("BasicAttack")
@@ -203,4 +245,4 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-VD_Notify("NO MERCY", "Violence District & Native Aim Ready!", 4)
+VD_Notify("NO MERCY", "Predictive Auto Aim Ready!", 4)
