@@ -1,5 +1,5 @@
 --[[
-  NO MERCY — "VIOLENCE DISTRICT" (Stable Orion UI & Predictive Auto Aim)
+  NO MERCY — "VIOLENCE DISTRICT" (Orion Library + Twist of Fate Working Predictive Aim)
 ]]
 
 local ICON = {
@@ -16,13 +16,14 @@ local ICON = {
     Banner   = "rbxassetid://117118608066997",
 }
 
+-- ===================== GLOBAL CONFIG & STATE =====================
 getgenv().VD = getgenv().VD or {
     AutoSkillcheck        = false,
     AUTO_ToFAim           = true,
     AUTO_ToFTargetMode    = "Killer",
     AUTO_ToFRadius        = 150,
-    AUTO_ToFPredict       = true,
-    AUTO_ToFBulletSpeed   = 200,
+    AUTO_ToFPredict       = true,  -- Prediksi kordinat saat target bergerak/berbelok
+    AUTO_ToFBulletSpeed   = 200,   -- Kecepatan estimasi peluru
     GodModeEnabled        = false,
     AUTO_Attack           = false,
     AUTO_AttackRange      = 12,
@@ -39,18 +40,18 @@ local CollectionService = game:GetService("CollectionService")
 local LocalPlayer       = Players.LocalPlayer
 local VD                = getgenv().VD
 
--- Cek dan muat Orion Library dengan aman
-local success, OrionLib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/Marpiii/UiLib/refs/heads/main/source.lua"))()
-end)
-
-if not success or not OrionLib then
-    warn("[NO MERCY] Gagal memuat Orion Library!")
-    return
+local function VD_Notify(title, content, duration)
+    pcall(function()
+        if OrionLib and OrionLib.MakeNotification then
+            OrionLib:MakeNotification({ Name = title, Content = content, Image = ICON.Logo, Time = duration or 3 })
+        else
+            print("[NO MERCY] " .. title .. " - " .. content)
+        end
+    end)
 end
 
 -- ============================================================
---  LOGIKA PREDIKSI KORDINAT & AUTO AIM
+--  LOGIKA TARGET & PREDIKSI KORDINAT (AUTO AIM)
 -- ============================================================
 local function getAutoAimDirection(originPos)
     local closestTarget = nil
@@ -86,16 +87,20 @@ local function getAutoAimDirection(originPos)
     
     if closestTarget then
         local targetPos = closestTarget.Position
+        
+        -- Fitur Prediksi Kordinat (Menghitung arah belokan/larian target)
         if VD.AUTO_ToFPredict and closestTarget.AssemblyLinearVelocity then
             local distance = (targetPos - originPos).Magnitude
             local travelTime = distance / VD.AUTO_ToFBulletSpeed
             targetPos = targetPos + (closestTarget.AssemblyLinearVelocity * travelTime)
         end
+        
         return (targetPos - originPos).Unit
     end
     return nil
 end
 
+-- Hooking Remote Fire asli Twist of Fate agar peluru langsung meluncur ke target
 task.spawn(function()
     pcall(function()
         local fireRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Items"):WaitForChild("Twist of Fate"):WaitForChild("Fire", 5)
@@ -109,7 +114,7 @@ task.spawn(function()
                     if char and char:FindFirstChild("HumanoidRootPart") then
                         local autoDir = getAutoAimDirection(char.HumanoidRootPart.Position)
                         if autoDir then
-                            args[2] = autoDir
+                            args[2] = autoDir -- Mengubah argumen arah tembakan ke kordinat target/prediksi
                         end
                     end
                 end
@@ -119,6 +124,7 @@ task.spawn(function()
     end)
 end)
 
+-- Loop Pengaman God Mode
 RunService.RenderStepped:Connect(function()
     if VD.GodModeEnabled then
         local char = LocalPlayer.Character
@@ -143,6 +149,8 @@ end)
 -- ============================================================
 --  ORION UI SETUP
 -- ============================================================
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marpiii/UiLib/refs/heads/main/source.lua"))()
+
 local Window = OrionLib:MakeWindow({
     Name = "NO MERCY — VIOLENCE DISTRICT",
     HidePremium = false,
@@ -160,10 +168,10 @@ local VisualTab = Window:MakeTab({ Name = "Visual", Icon = ICON.Eye, PremiumOnly
 -- Info Tab
 local InfoSec = InfoTab:AddSection({ Name = "Tentang" })
 InfoSec:AddLabel("NO MERCY — Violence District")
-InfoSec:AddLabel("Predictive Auto Aim Integrated")
+InfoSec:AddLabel("Twist of Fate Working Auto Aim")
 
--- Aimbot Tab
-local AimSec = AimbotTab:AddSection({ Name = "Predictive Auto Aim" })
+-- Aimbot Tab (Menu Pengaturan Auto Aim & God Mode)
+local AimSec = AimbotTab:AddSection({ Name = "Twist of Fate Controller" })
 
 AimSec:AddToggle({ 
     Name = "Auto Aim : ON/OFF", 
@@ -215,6 +223,7 @@ VisSec:AddToggle({
     Callback = function(v) Lighting.Brightness = v and 1 or 2 end 
 })
 
+-- Background Loop untuk Auto Attack
 RunService.Heartbeat:Connect(function()
     if VD.AUTO_Attack and LocalPlayer.Team and LocalPlayer.Team.Name == "Killer" then
         pcall(function()
@@ -225,7 +234,7 @@ RunService.Heartbeat:Connect(function()
                     local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     if tRoot and (tRoot.Position - root.Position).Magnitude <= VD.AUTO_AttackRange then
                         local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                        local basicAtt = remotes and remotes:FindFirstChild("Remotes") and remotes.Remotes:FindFirstChild("Attacks") -- aman
+                        local basicAtt = remotes and remotes:FindFirstChild("Attacks") and remotes.Attacks:FindFirstChild("BasicAttack")
                         if basicAtt then basicAtt:FireServer(false) end
                         break
                     end
@@ -235,9 +244,4 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-OrionLib:MakeNotification({
-    Name = "NO MERCY",
-    Content = "Violence District UI Loaded Successfully!",
-    Image = ICON.Logo,
-    Time = 4
-})
+VD_Notify("NO MERCY", "Violence District & Working Aim Ready!", 4)
