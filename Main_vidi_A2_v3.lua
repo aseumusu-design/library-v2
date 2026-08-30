@@ -61,7 +61,8 @@ end
 
 local function createAutoAimUI()
 	local lp = v_u_4.LocalPlayer
-	local pg = lp:WaitForChild("PlayerGui")
+	local pg = lp:WaitForChild("PlayerGui", 5)
+	if not pg then return end
 	
 	local oldGui = pg:FindFirstChild("AutoAimAdvancedGui")
 	if oldGui then oldGui:Destroy() end
@@ -69,86 +70,91 @@ local function createAutoAimUI()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "AutoAimAdvancedGui"
 	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = pg
 
-	-- Frame Utama (Bisa di-drag)
+	-- Frame Utama (Bisa di-drag di HP / PC)
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 160, 0, 160)
-	mainFrame.Position = UDim2.new(0.5, -80, 0.4, -80)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	mainFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)
+	mainFrame.Size = UDim2.new(0, 170, 0, 165)
+	mainFrame.Position = UDim2.new(0.5, -85, 0.35, -82)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	mainFrame.BorderColor3 = Color3.fromRGB(255, 255, 255)
 	mainFrame.Active = true
 	mainFrame.Parent = screenGui
 
 	-- Tombol On/Off Auto Aim
 	local toggleBtn = Instance.new("TextButton")
 	toggleBtn.Name = "ToggleBtn"
-	toggleBtn.Size = UDim2.new(0, 140, 0, 25)
-	toggleBtn.Position = UDim2.new(0.5, -70, 0, 8)
+	toggleBtn.Size = UDim2.new(0, 150, 0, 26)
+	toggleBtn.Position = UDim2.new(0.5, -75, 0, 8)
 	toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	toggleBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+	toggleBtn.BorderColor3 = Color3.fromRGB(200, 200, 200)
 	toggleBtn.Text = "AUTO AIM : ON"
 	toggleBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-	toggleBtn.TextSize = 11
+	toggleBtn.TextSize = 12
 	toggleBtn.Font = Enum.Font.SourceSansBold
 	toggleBtn.Parent = mainFrame
 
 	-- Tombol Ganti Target (Killer / Survivor)
 	local targetBtn = Instance.new("TextButton")
 	targetBtn.Name = "TargetBtn"
-	targetBtn.Size = UDim2.new(0, 140, 0, 25)
-	targetBtn.Position = UDim2.new(0.5, -70, 0, 38)
+	targetBtn.Size = UDim2.new(0, 150, 0, 26)
+	targetBtn.Position = UDim2.new(0.5, -75, 0, 39)
 	targetBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	targetBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+	targetBtn.BorderColor3 = Color3.fromRGB(200, 200, 200)
 	targetBtn.Text = "TARGET : KILLER"
 	targetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-	targetBtn.TextSize = 11
+	targetBtn.TextSize = 12
 	targetBtn.Font = Enum.Font.SourceSansBold
 	targetBtn.Parent = mainFrame
 
 	-- Tombol God Mode
 	local godModeBtn = Instance.new("TextButton")
 	godModeBtn.Name = "GodModeBtn"
-	godModeBtn.Size = UDim2.new(0, 140, 0, 25)
-	godModeBtn.Position = UDim2.new(0.5, -70, 0, 68)
+	godModeBtn.Size = UDim2.new(0, 150, 0, 26)
+	godModeBtn.Position = UDim2.new(0.5, -75, 0, 70)
 	godModeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	godModeBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+	godModeBtn.BorderColor3 = Color3.fromRGB(200, 200, 200)
 	godModeBtn.Text = "GOD MODE : OFF"
 	godModeBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-	godModeBtn.TextSize = 11
+	godModeBtn.TextSize = 12
 	godModeBtn.Font = Enum.Font.SourceSansBold
 	godModeBtn.Parent = mainFrame
 
 	-- Label & Tombol Pengatur Radius
 	local radiusLabel = Instance.new("TextLabel")
 	radiusLabel.Name = "RadiusLabel"
-	radiusLabel.Size = UDim2.new(0, 140, 0, 18)
-	radiusLabel.Position = UDim2.new(0.5, -70, 0, 98)
+	radiusLabel.Size = UDim2.new(0, 150, 0, 18)
+	radiusLabel.Position = UDim2.new(0.5, -75, 0, 101)
 	radiusLabel.BackgroundTransparency = 1
 	radiusLabel.Text = "RADIUS : " .. MaxRadius .. " Studs"
 	radiusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	radiusLabel.TextSize = 10
+	radiusLabel.TextSize = 11
 	radiusLabel.Font = Enum.Font.SourceSansBold
 	radiusLabel.Parent = mainFrame
 
 	local minusBtn = Instance.new("TextButton")
-	minusBtn.Size = UDim2.new(0, 30, 0, 18)
-	minusBtn.Position = UDim2.new(0.5, -70, 0, 118)
+	minusBtn.Size = UDim2.new(0, 35, 0, 20)
+	minusBtn.Position = UDim2.new(0.5, -75, 0, 122)
 	minusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	minusBtn.Text = "-"
 	minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	minusBtn.TextSize = 14
+	minusBtn.Font = Enum.Font.SourceSansBold
 	minusBtn.Parent = mainFrame
 
 	local plusBtn = Instance.new("TextButton")
-	plusBtn.Size = UDim2.new(0, 30, 0, 18)
-	plusBtn.Position = UDim2.new(0.5, 40, 0, 118)
+	plusBtn.Size = UDim2.new(0, 35, 0, 20)
+	plusBtn.Position = UDim2.new(0.5, 40, 0, 122)
 	plusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	plusBtn.Text = "+"
 	plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	plusBtn.TextSize = 14
+	plusBtn.Font = Enum.Font.SourceSansBold
 	plusBtn.Parent = mainFrame
 
-	-- Logika Dragging untuk HP & PC pada MainFrame
+	-- Logika Dragging (Support Touch HP & Mouse PC)
 	local dragging, dragInput, dragStart, startPos
 
 	mainFrame.InputBegan:Connect(function(input)
@@ -177,7 +183,7 @@ local function createAutoAimUI()
 		end
 	end)
 
-	-- Fungsi Tombol-tombol UI
+	-- Fungsi Aksi Tombol
 	toggleBtn.MouseButton1Click:Connect(function()
 		AutoAimEnabled = not AutoAimEnabled
 		if AutoAimEnabled then
@@ -223,9 +229,10 @@ local function createAutoAimUI()
 	end)
 end
 
-task.spawn(createAutoAimUI)
+-- Eksekusi pembuatan UI dengan aman
+task.defer(createAutoAimUI)
 v_u_4.LocalPlayer.CharacterAdded:Connect(function()
-	task.wait(1)
+	task.wait(1.5)
 	createAutoAimUI()
 end)
 
@@ -238,7 +245,6 @@ v_u_3.RenderStepped:Connect(function()
 			if hum then
 				hum.Health = hum.MaxHealth
 			end
-			-- Hapus atribut mati/down jika ada sistem game yang menerapkannya
 			if v_u_4.LocalPlayer:GetAttribute("IsDead") then
 				v_u_4.LocalPlayer:SetAttribute("IsDead", false)
 			end
@@ -339,7 +345,7 @@ function v6.start(p9)
 	end
 	local function v_u_62()
 		if GodModeEnabled then
-			return false -- Mengabaikan status sibuk/down jika God Mode aktif
+			return false
 		end
 		if v_u_21:GetAttribute("IsDead") then
 			return true
@@ -799,7 +805,7 @@ function v6.start(p9)
 	end)
 	v_u_8.OnClientEvent:Connect(function(p145)
 		if p145 == "SelfDamage" then
-			if v_u_28 then
+		if v_u_28 then
 				v_u_28:Play()
 				return
 			end
