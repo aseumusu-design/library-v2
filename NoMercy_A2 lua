@@ -1,115 +1,129 @@
--- Invisible System
--- Untuk Roblox Studio / game milik sendiri
--- Taruh sebagai LocalScript di StarterPlayer > StarterPlayerScripts
-
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
 local player = Players.LocalPlayer
 
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "InvisibleToggle"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Name = "Toggle"
+button.Size = UDim2.new(0, 180, 0, 50)
+button.Position = UDim2.new(0.5, -90, 0.8, 0)
+button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.TextSize = 18
+button.Font = Enum.Font.GothamBold
+button.Text = "INVISIBLE : OFF"
+button.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = button
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(80, 80, 80)
+stroke.Parent = button
+
+--// State
 local invisible = false
 local savedCFrame = nil
-local savedTransparency = {}
 
 local function getCharacter()
 	return player.Character or player.CharacterAdded:Wait()
 end
 
-local function setCharacterInvisible(character, state)
+local function setInvisible(character, state)
 	for _, obj in ipairs(character:GetDescendants()) do
 		if obj:IsA("BasePart") then
 			if state then
-				if savedTransparency[obj] == nil then
-					savedTransparency[obj] = obj.Transparency
-				end
 				obj.LocalTransparencyModifier = 1
 			else
 				obj.LocalTransparencyModifier = 0
 			end
-
 		elseif obj:IsA("Decal") or obj:IsA("Texture") then
-			if state then
-				if savedTransparency[obj] == nil then
-					savedTransparency[obj] = obj.Transparency
-				end
-				obj.Transparency = 1
-			else
-				if savedTransparency[obj] ~= nil then
-					obj.Transparency = savedTransparency[obj]
-				end
-			end
+			obj.Transparency = state and 1 or 0
 		end
 	end
 end
 
-local function enableInvisible()
-	if invisible then return end
-
+local function turnOn()
 	local character = getCharacter()
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local root = character:FindFirstChild("HumanoidRootPart")
 
-	if not humanoid or not root then return end
-
-	invisible = true
+	if not humanoid or not root then
+		return
+	end
 
 	-- Simpan posisi awal
 	savedCFrame = root.CFrame
+	invisible = true
 
 	-- Langsung invisible
-	setCharacterInvisible(character, true)
+	setInvisible(character, true)
 
-	-- Bikin karakter jatuh ke bawah
-	root.AssemblyLinearVelocity = Vector3.new(0, -100, 0)
+	-- Efek jatuh ke bawah
+	root.CFrame = root.CFrame + Vector3.new(0, -20, 0)
 
-	task.wait(0.4)
+	task.wait(0.25)
 
 	-- Naik lagi tanpa membunuh Humanoid
-	if invisible and root.Parent then
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.CFrame = savedCFrame + Vector3.new(0, 50, 0)
+	if character.Parent and humanoid.Health > 0 then
+		root.CFrame = savedCFrame + Vector3.new(0, 5, 0)
 	end
+
+	button.Text = "INVISIBLE : ON"
+
+	TweenService:Create(
+		button,
+		TweenInfo.new(0.2),
+		{BackgroundColor3 = Color3.fromRGB(30, 120, 70)}
+	):Play()
 end
 
-local function disableInvisible()
-	if not invisible then return end
-
+local function turnOff()
 	local character = getCharacter()
 	local root = character:FindFirstChild("HumanoidRootPart")
 
-	-- Kembalikan posisi awal
+	invisible = false
+
+	-- Kembalikan visual karakter
+	setInvisible(character, false)
+
+	-- Kembalikan ke posisi sebelum ON
 	if root and savedCFrame then
-		root.AssemblyLinearVelocity = Vector3.zero
 		root.CFrame = savedCFrame
 	end
 
-	-- Balik terlihat
-	setCharacterInvisible(character, false)
+	button.Text = "INVISIBLE : OFF"
 
-	invisible = false
-	savedCFrame = nil
-	savedTransparency = {}
+	TweenService:Create(
+		button,
+		TweenInfo.new(0.2),
+		{BackgroundColor3 = Color3.fromRGB(35, 35, 35)}
+	):Play()
 end
 
-local function toggleInvisible()
+button.MouseButton1Click:Connect(function()
 	if invisible then
-		disableInvisible()
+		turnOff()
 	else
-		enableInvisible()
-	end
-end
-
--- Contoh toggle dengan tombol keyboard
--- Tekan I untuk ON/OFF
-game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
-	if processed then return end
-
-	if input.KeyCode == Enum.KeyCode.I then
-		toggleInvisible()
+		turnOn()
 	end
 end)
 
--- Kalau karakter mati/respawn, reset status
+-- Kalau karakter respawn, reset status
 player.CharacterAdded:Connect(function()
 	invisible = false
 	savedCFrame = nil
-	savedTransparency = {}
+
+	task.wait(0.5)
+
+	button.Text = "INVISIBLE : OFF"
+	button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 end)
