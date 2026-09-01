@@ -1,0 +1,367 @@
+--// ============================================
+--//  VD TRUE FE INVISIBLE — 3 METHOD COMBO
+--//  Metode: Offset | Destroy | Network Sleep
+--//  Game: Violence District
+--//  Toggle: INSERT
+--// ============================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local isInvisible = false
+local invisConnection = nil
+local savedCFrame = nil
+local fakeCharacter = nil
+local methodUsed = 1
+
+--// GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "VD_TrueInvis"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 320, 0, 160)
+mainFrame.Position = UDim2.new(0, 10, 0.5, -80)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+title.Text = "👻 VD TRUE FE INVISIBLE"
+title.TextColor3 = Color3.fromRGB(255, 80, 80)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 15
+title.Parent = mainFrame
+
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(0.9, 0, 0, 22)
+statusLabel.Position = UDim2.new(0.05, 0, 0.22, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: VISIBLE"
+statusLabel.TextColor3 = Color3.fromRGB(0, 255, 80)
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 16
+statusLabel.Parent = mainFrame
+
+local methodLabel = Instance.new("TextLabel")
+methodLabel.Size = UDim2.new(0.9, 0, 0, 18)
+methodLabel.Position = UDim2.new(0.05, 0, 0.40, 0)
+methodLabel.BackgroundTransparency = 1
+methodLabel.Text = "Method: None"
+methodLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+methodLabel.Font = Enum.Font.Gotham
+methodLabel.TextSize = 12
+methodLabel.Parent = mainFrame
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0.9, 0, 0, 32)
+toggleBtn.Position = UDim2.new(0.05, 0, 0.58, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+toggleBtn.Text = "Toggle Invisible [INSERT]"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 13
+toggleBtn.Parent = mainFrame
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+
+local warnLabel = Instance.new("TextLabel")
+warnLabel.Size = UDim2.new(0.9, 0, 0, 30)
+warnLabel.Position = UDim2.new(0.05, 0, 0.78, 0)
+warnLabel.BackgroundTransparency = 1
+warnLabel.Text = "⚠️ Jangan lari kencang! Risiko ban!"
+warnLabel.TextColor3 = Color3.fromRGB(255, 180, 0)
+warnLabel.Font = Enum.Font.Gotham
+warnLabel.TextSize = 11
+warnLabel.TextWrapped = true
+warnLabel.Parent = mainFrame
+
+--// ============================================
+--//  METHOD 1: CHARACTER OFFSET (Paling Mungkin Works)
+--//  Pindahin character ke 9e9 tapi tetap interact
+--// ============================================
+
+local function method1_Offset(character)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    savedCFrame = hrp.CFrame
+    
+    --// Hancurkan SEMUA visual (accessories, clothing, face, dll)
+    for _, obj in pairs(character:GetDescendants()) do
+        if obj:IsA("Accessory") then
+            obj:Destroy()
+        elseif obj:IsA("Clothing") or obj:IsA("ShirtGraphic") then
+            obj:Destroy()
+        elseif obj:IsA("Decal") and obj.Parent and obj.Parent.Name == "Head" then
+            obj:Destroy() -- Hapus muka
+        elseif obj:IsA("BillboardGui") then
+            obj:Destroy() -- Hapus name tag
+        elseif obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
+            obj:Destroy() -- Hapus semua body part
+        end
+    end
+    
+    --// HRP di-set ke ukuran super kecil & pindah jauh
+    hrp.Size = Vector3.new(0.01, 0.01, 0.01)
+    hrp.Transparency = 1
+    hrp.CanCollide = false
+    
+    --// Pindah ke jauh (void)
+    hrp.CFrame = CFrame.new(0, -500, 0)
+    
+    --// Buat fake part untuk control di posisi asli
+    fakeCharacter = Instance.new("Part")
+    fakeCharacter.Name = "FakeControl"
+    fakeCharacter.Size = Vector3.new(1, 1, 1)
+    fakeCharacter.Transparency = 1
+    fakeCharacter.CanCollide = false
+    fakeCharacter.Anchored = false
+    fakeCharacter.CFrame = savedCFrame
+    fakeCharacter.Parent = Workspace
+    
+    --// BodyPosition biar fake part ngikutin control
+    local bp = Instance.new("BodyPosition")
+    bp.MaxForce = Vector3.new(400000, 400000, 400000)
+    bp.Position = savedCFrame.Position
+    bp.Parent = fakeCharacter
+    
+    --// BodyGyro biar orientasi bener
+    local bg = Instance.new("BodyGyro")
+    bg.MaxTorque = Vector3.new(400000, 400000, 400000)
+    bg.Parent = fakeCharacter
+    
+    --// Loop: Pindahin HRP ke fake part setiap frame
+    invisConnection = RunService.Heartbeat:Connect(function()
+        if not isInvisible then return end
+        if not fakeCharacter or not fakeCharacter.Parent then return end
+        if not hrp or not hrp.Parent then return end
+        
+        -- Pindahin HRP ke posisi fake (tapi jauh di bawah)
+        -- Ini trick: Server lihat posisi HRP, tapi visual udah dihapus
+        hrp.CFrame = CFrame.new(0, -500, 0)
+        hrp.Velocity = Vector3.new(0, 0, 0)
+    end)
+    
+    return true
+end
+
+--// ============================================
+--//  METHOD 2: NETWORK SLEEP (Kalau executor support)
+--//  Pakai sethiddenproperty untuk matiin network
+--// ============================================
+
+local function method2_NetworkSleep(character)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    
+    if not sethiddenproperty then
+        return false -- Executor nggak support
+    end
+    
+    --// Simpan original
+    savedCFrame = hrp.CFrame
+    
+    --// Hapus semua visual sama kayak method 1
+    for _, obj in pairs(character:GetDescendants()) do
+        if obj:IsA("Accessory") then obj:Destroy()
+        elseif obj:IsA("Clothing") or obj:IsA("ShirtGraphic") then obj:Destroy()
+        elseif obj:IsA("Decal") then obj:Destroy()
+        elseif obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then obj:Destroy()
+        end
+    end
+    
+    hrp.Size = Vector3.new(0.01, 0.01, 0.01)
+    hrp.Transparency = 1
+    
+    --// Network sleep: karakter nggak di-replicate ke client lain
+    pcall(function()
+        sethiddenproperty(hrp, "NetworkIsSleeping", true)
+        sethiddenproperty(character, "NetworkIsSleeping", true)
+    end)
+    
+    hrp.CFrame = savedCFrame -- Tetap di posisi asli tapi nggak di-replicate
+    
+    return true
+end
+
+--// ============================================
+--//  METHOD 3: DESTROY CHARACTER + REANIMATE
+--//  Paling ekstrem, paling mungkin bener-bener ilang
+--// ============================================
+
+local function method3_Destroy(character)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    savedCFrame = hrp.CFrame
+    
+    --// Simpan tool
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = backpack
+        end
+    end
+    
+    --// Hancurkan SEMUA kecuali HRP & Humanoid
+    for _, obj in pairs(character:GetChildren()) do
+        if not obj:IsA("Humanoid") and obj.Name ~= "HumanoidRootPart" then
+            obj:Destroy()
+        end
+    end
+    
+    --// HRP jadi super kecil & transparan
+    hrp.Size = Vector3.new(0.01, 0.01, 0.01)
+    hrp.Transparency = 1
+    hrp.CanCollide = false
+    
+    --// Matiin semua property yang bisa kelihatan
+    humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+    humanoid.NameDisplayDistance = 0
+    
+    --// Loop maintain
+    invisConnection = RunService.Heartbeat:Connect(function()
+        if not isInvisible then return end
+        if hrp and hrp.Parent then
+            hrp.Transparency = 1
+            hrp.Size = Vector3.new(0.01, 0.01, 0.01)
+        end
+    end)
+    
+    return true
+end
+
+--// ============================================
+--//  RESTORE FUNCTION
+--// ============================================
+
+local function restoreVisible()
+    if invisConnection then
+        invisConnection:Disconnect()
+        invisConnection = nil
+    end
+    
+    if fakeCharacter then
+        fakeCharacter:Destroy()
+        fakeCharacter = nil
+    end
+    
+    --// Kalau network sleep, restore
+    if sethiddenproperty then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                sethiddenproperty(char, "NetworkIsSleeping", false)
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    sethiddenproperty(hrp, "NetworkIsSleeping", false)
+                end
+            end
+        end)
+    end
+    
+    --// Respawn aja paling bersih
+    LocalPlayer.Character:BreakJoints()
+    
+    statusLabel.Text = "Status: VISIBLE (Respawned)"
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 80)
+    methodLabel.Text = "Method: None"
+    toggleBtn.Text = "Toggle Invisible [INSERT]"
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    
+    isInvisible = false
+end
+
+--// ============================================
+--//  TOGGLE
+--// ============================================
+
+local function toggleInvisible()
+    if isInvisible then
+        restoreVisible()
+        return
+    end
+    
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    isInvisible = true
+    statusLabel.Text = "Status: TRYING..."
+    statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+    
+    --// Coba Method 1 dulu
+    methodLabel.Text = "Method: 1/3 Offset"
+    local success = pcall(function() method1_Offset(character) end)
+    
+    if not success then
+        --// Coba Method 2
+        methodLabel.Text = "Method: 2/3 Network"
+        success = pcall(function() method2_NetworkSleep(character) end)
+        
+        if not success then
+            --// Coba Method 3
+            methodLabel.Text = "Method: 3/3 Destroy"
+            success = pcall(function() method3_Destroy(character) end)
+        end
+    end
+    
+    if success then
+        statusLabel.Text = "Status: INVISIBLE 👻"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+        toggleBtn.Text = "MATIKAN (Respawn)"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+        print("✅ VD True Invisible: AKTIF")
+    else
+        statusLabel.Text = "Status: GAGAL"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        isInvisible = false
+    end
+end
+
+--// Events
+toggleBtn.MouseButton1Click:Connect(toggleInvisible)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.Insert and not gameProcessed then
+        toggleInvisible()
+    end
+end)
+
+--// Drag GUI
+local dragging, dragStart, startPos = false, nil, nil
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+print("👻 VD TRUE FE INVISIBLE loaded!")
+print("Tekan INSERT. Kalau nggak works, coba matiin dulu trus tekan INSERT lagi.")
