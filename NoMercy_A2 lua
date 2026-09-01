@@ -1,41 +1,115 @@
-local key = Enum.KeyCode.X -- key to toggle invisibility
+-- Invisible System
+-- Untuk Roblox Studio / game milik sendiri
+-- Taruh sebagai LocalScript di StarterPlayer > StarterPlayerScripts
 
---// dont edit script below
-local invis_on = false
-function onKeyPress(inputObject, chat)
-    if chat then return end
-    if inputObject.KeyCode == key then
-	    invis_on = not invis_on
-    	if invis_on then
-            local savedpos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-            wait()
-            game.Players.LocalPlayer.Character:MoveTo(Vector3.new(-25.95, 84, 3537.55))
-            wait(.15)
-            local Seat = Instance.new('Seat', game.Workspace)
-            Seat.Anchored = false
-            Seat.CanCollide = false
-            Seat.Name = 'invischair'
-            Seat.Transparency = 1
-            Seat.Position = Vector3.new(-25.95, 84, 3537.55)
-            local Weld = Instance.new("Weld", Seat)
-            Weld.Part0 = Seat
-            Weld.Part1 = game.Players.LocalPlayer.Character:FindFirstChild("Torso") or game.Players.LocalPlayer.Character.UpperTorso
-            wait()
-            Seat.CFrame = savedpos
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Invis On";
-                Duration = 1;
-                Text = "";
-            })
-        else
-            workspace:FindFirstChild('invischair'):Remove()
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Invis Off";
-                Duration = 1;
-                Text = "";
-            })
-        end
-    end
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local invisible = false
+local savedCFrame = nil
+local savedTransparency = {}
+
+local function getCharacter()
+	return player.Character or player.CharacterAdded:Wait()
 end
 
-game:GetService("UserInputService").InputBegan:connect(onKeyPress)
+local function setCharacterInvisible(character, state)
+	for _, obj in ipairs(character:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			if state then
+				if savedTransparency[obj] == nil then
+					savedTransparency[obj] = obj.Transparency
+				end
+				obj.LocalTransparencyModifier = 1
+			else
+				obj.LocalTransparencyModifier = 0
+			end
+
+		elseif obj:IsA("Decal") or obj:IsA("Texture") then
+			if state then
+				if savedTransparency[obj] == nil then
+					savedTransparency[obj] = obj.Transparency
+				end
+				obj.Transparency = 1
+			else
+				if savedTransparency[obj] ~= nil then
+					obj.Transparency = savedTransparency[obj]
+				end
+			end
+		end
+	end
+end
+
+local function enableInvisible()
+	if invisible then return end
+
+	local character = getCharacter()
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local root = character:FindFirstChild("HumanoidRootPart")
+
+	if not humanoid or not root then return end
+
+	invisible = true
+
+	-- Simpan posisi awal
+	savedCFrame = root.CFrame
+
+	-- Langsung invisible
+	setCharacterInvisible(character, true)
+
+	-- Bikin karakter jatuh ke bawah
+	root.AssemblyLinearVelocity = Vector3.new(0, -100, 0)
+
+	task.wait(0.4)
+
+	-- Naik lagi tanpa membunuh Humanoid
+	if invisible and root.Parent then
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.CFrame = savedCFrame + Vector3.new(0, 50, 0)
+	end
+end
+
+local function disableInvisible()
+	if not invisible then return end
+
+	local character = getCharacter()
+	local root = character:FindFirstChild("HumanoidRootPart")
+
+	-- Kembalikan posisi awal
+	if root and savedCFrame then
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.CFrame = savedCFrame
+	end
+
+	-- Balik terlihat
+	setCharacterInvisible(character, false)
+
+	invisible = false
+	savedCFrame = nil
+	savedTransparency = {}
+end
+
+local function toggleInvisible()
+	if invisible then
+		disableInvisible()
+	else
+		enableInvisible()
+	end
+end
+
+-- Contoh toggle dengan tombol keyboard
+-- Tekan I untuk ON/OFF
+game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+	if processed then return end
+
+	if input.KeyCode == Enum.KeyCode.I then
+		toggleInvisible()
+	end
+end)
+
+-- Kalau karakter mati/respawn, reset status
+player.CharacterAdded:Connect(function()
+	invisible = false
+	savedCFrame = nil
+	savedTransparency = {}
+end)
