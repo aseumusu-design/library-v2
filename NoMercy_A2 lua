@@ -1,257 +1,41 @@
---// ============================================
---//  VD FE INVISIBLE 2026 — SEAT WELD METHOD
-//   Metode terbaru yang dipake script universal
-//   Toggle: INSERT
-// ============================================
+local key = Enum.KeyCode.X -- key to toggle invisibility
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local LocalPlayer = Players.LocalPlayer
-
-local isInvisible = false
-local invisChair = nil
-local savedPos = nil
-local seatConnection = nil
-
---// GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "VD_Invis2026"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 300, 0, 140)
-mainFrame.Position = UDim2.new(0, 10, 0.5, -70)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = screenGui
-
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 32)
-title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-title.Text = "👻 VD Invis 2026 (Seat Method)"
-title.TextColor3 = Color3.fromRGB(255, 80, 80)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 14
-title.Parent = mainFrame
-
-Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
-
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(0.9, 0, 0, 22)
-statusLabel.Position = UDim2.new(0.05, 0, 0.28, 0)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Status: VISIBLE"
-statusLabel.TextColor3 = Color3.fromRGB(0, 255, 80)
-statusLabel.Font = Enum.Font.GothamBold
-statusLabel.TextSize = 16
-statusLabel.Parent = mainFrame
-
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0.9, 0, 0, 35)
-toggleBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-toggleBtn.Text = "Toggle Invisible [INSERT]"
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.TextSize = 14
-toggleBtn.Parent = mainFrame
-
-Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
-
-local warnLabel = Instance.new("TextLabel")
-warnLabel.Size = UDim2.new(0.9, 0, 0, 30)
-warnLabel.Position = UDim2.new(0.05, 0, 0.78, 0)
-warnLabel.BackgroundTransparency = 1
-warnLabel.Text = "⚠️ JANGAN LARI KENCANG!"
-warnLabel.TextColor3 = Color3.fromRGB(255, 180, 0)
-warnLabel.Font = Enum.Font.Gotham
-warnLabel.TextSize = 11
-warnLabel.TextWrapped = true
-warnLabel.Parent = mainFrame
-
---// ============================================
---//  CORE: SEAT WELD METHOD (2026)
---// ============================================
-
-local function enableInvisibility()
-    local character = LocalPlayer.Character
-    if not character then return false end
-    
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-    
-    if not hrp or not humanoid or not torso then
-        warn("❌ Character belum fully loaded!")
-        return false
-    end
-    
-    savedPos = hrp.CFrame
-    
-    --// Step 1: Hancurkan semua visual (accessories, clothing, face)
-    for _, obj in pairs(character:GetDescendants()) do
-        if obj:IsA("Accessory") then
-            obj:Destroy()
-        elseif obj:IsA("Clothing") or obj:IsA("ShirtGraphic") then
-            obj:Destroy()
-        elseif obj:IsA("Decal") and obj.Parent and obj.Parent.Name == "Head" then
-            obj:Destroy()
-        elseif obj:IsA("BillboardGui") then
-            obj:Destroy()
-        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-            obj:Destroy()
-        elseif obj:IsA("Sound") then
-            obj.Volume = 0
+--// dont edit script below
+local invis_on = false
+function onKeyPress(inputObject, chat)
+    if chat then return end
+    if inputObject.KeyCode == key then
+	    invis_on = not invis_on
+    	if invis_on then
+            local savedpos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+            wait()
+            game.Players.LocalPlayer.Character:MoveTo(Vector3.new(-25.95, 84, 3537.55))
+            wait(.15)
+            local Seat = Instance.new('Seat', game.Workspace)
+            Seat.Anchored = false
+            Seat.CanCollide = false
+            Seat.Name = 'invischair'
+            Seat.Transparency = 1
+            Seat.Position = Vector3.new(-25.95, 84, 3537.55)
+            local Weld = Instance.new("Weld", Seat)
+            Weld.Part0 = Seat
+            Weld.Part1 = game.Players.LocalPlayer.Character:FindFirstChild("Torso") or game.Players.LocalPlayer.Character.UpperTorso
+            wait()
+            Seat.CFrame = savedpos
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Invis On";
+                Duration = 1;
+                Text = "";
+            })
+        else
+            workspace:FindFirstChild('invischair'):Remove()
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Invis Off";
+                Duration = 1;
+                Text = "";
+            })
         end
-    end
-    
-    --// Step 2: Transparanin semua BasePart
-    for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-            part.Transparency = 1
-            part.CastShadow = false
-        elseif part:IsA("BasePart") and part.Name == "HumanoidRootPart" then
-            part.Transparency = 1
-            part.Size = Vector3.new(0.01, 0.01, 0.01)
-        end
-    end
-    
-    --// Step 3: Teleport ke posisi jauh (atas map / void)
-    -- Posisi ini HARUS di atas map VD, jangan terlalu jauh
-    local teleportPos = Vector3.new(0, 500, 0) -- Atas langit VD
-    
-    pcall(function()
-        character:MoveTo(teleportPos)
-    end)
-    
-    task.wait(0.15)
-    
-    --// Step 4: Buat Seat & Weld ke Torso
-    invisChair = Instance.new("Seat")
-    invisChair.Name = "invischair_vd2026"
-    invisChair.Anchored = false
-    invisChair.CanCollide = false
-    invisChair.Transparency = 1
-    invisChair.Size = Vector3.new(1, 1, 1)
-    invisChair.Parent = Workspace
-    
-    local weld = Instance.new("Weld")
-    weld.Part0 = invisChair
-    weld.Part1 = torso
-    weld.Parent = invisChair
-    
-    task.wait(0.05)
-    
-    --// Step 5: Teleport Seat balik ke posisi asli
-    -- Ini yang bikin "glitch" — character di posisi jauh tapi seat di posisi asli
-    invisChair.CFrame = savedPos
-    
-    --// Step 6: Maintain loop
-    seatConnection = RunService.Heartbeat:Connect(function()
-        if not isInvisible then return end
-        if invisChair and invisChair.Parent then
-            -- Seat tetap di posisi asli, character di posisi jauh
-            invisChair.CFrame = savedPos
-        end
-        -- Maintain transparency
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") and part.Transparency ~= 1 then
-                part.Transparency = 1
-            end
-        end
-    end)
-    
-    return true
-end
-
-local function disableInvisibility()
-    if seatConnection then
-        seatConnection:Disconnect()
-        seatConnection = nil
-    end
-    
-    if invisChair then
-        pcall(function() invisChair:Destroy() end)
-        invisChair = nil
-    end
-    
-    -- Respawn aja paling bersih
-    pcall(function()
-        LocalPlayer.Character:BreakJoints()
-    end)
-    
-    isInvisible = false
-    statusLabel.Text = "Status: VISIBLE"
-    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 80)
-    toggleBtn.Text = "Toggle Invisible [INSERT]"
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-end
-
---// Toggle
-local function toggleInvis()
-    if isInvisible then
-        disableInvisibility()
-        return
-    end
-    
-    isInvisible = true
-    statusLabel.Text = "Status: ACTIVATING..."
-    statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-    
-    local success = enableInvisibility()
-    
-    if success then
-        statusLabel.Text = "Status: INVISIBLE 👻"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-        toggleBtn.Text = "MATIKAN (Respawn)"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-        print("✅ VD Invis 2026: AKTIF")
-        print("⚠️  JANGAN LARI KENCANG! Risiko ban!")
-    else
-        statusLabel.Text = "Status: GAGAL"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        isInvisible = false
     end
 end
 
---// Events
-toggleBtn.MouseButton1Click:Connect(toggleInvis)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.Insert and not gameProcessed then
-        toggleInvis()
-    end
-end)
-
---// Drag GUI
-local dragging, dragStart, startPos = false, nil, nil
-
-mainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
-print("👻 VD Invisible 2026 (Seat Method) loaded!")
-print("Tekan INSERT untuk toggle")
-print("⚠️  Kalau nggak works, VD udah patch bug ini 😔")
+game:GetService("UserInputService").InputBegan:connect(onKeyPress)
