@@ -1,114 +1,72 @@
+-- Weliton Style Invisible Script (Clean & Fixed)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
 local isInvisible = false
-local fakeCharacter = nil
-local realRoot = nil
-local cloneRoot = nil
-local renderConnection = nil
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local backpack = localPlayer:WaitForChild("Backpack")
 
+-- Fungsi utama Invisible (Metode Tool / Desync Server)
 local function toggleInvisibility()
-    local character = localPlayer.Character
+    character = localPlayer.Character
     if not character then return end
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
     
-    if not humanoid or not rootPart then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        realRoot = rootPart
-        local savedCFrame = realRoot.CFrame
+        -- Simpan posisi terakhir sebelum invis
+        local savedCFrame = humanoidRootPart.CFrame
 
-        -- 1. Buat klon karakter di atas
-        character.Archivable = true
-        fakeCharacter = character:Clone()
-        fakeCharacter.Name = "VisualClone"
-        fakeCharacter.Parent = workspace
-        cloneRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
-
-        for _, v in pairs(fakeCharacter:GetChildren()) do
-            if v:IsA("LocalScript") then v.Disabled = true end
+        -- Cari tool di backpack untuk trik desync, atau gunakan metode drop/equip jika ada
+        local tool = character:FindFirstChildOfClass("Tool") or backpack:FindFirstChildOfClass("Tool")
+        if tool then
+            tool.Parent = character
+            task.wait()
+            tool.Parent = backpack
         end
 
-        -- Atur transparansi klon (0.3 agar kamu masih bisa lihat sedikit bayangan karaktermu sendiri)
-        for _, v in pairs(fakeCharacter:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") then
-                v.Transparency = 0.3
-            elseif v:IsA("Accessory") then
-                local h = v:FindFirstChild("Handle")
-                if h then h.Transparency = 0.3 end
-            end
-        end
-
-        if cloneRoot then
-            cloneRoot.CFrame = savedCFrame
-        end
-        workspace.CurrentCamera.CameraSubject = fakeCharacter:FindFirstChildOfClass("Humanoid")
-
-        -- 2. Pindahkan badan asli ke bawah tanah (Void)
-        realRoot.CFrame = CFrame.new(savedCFrame.Position - Vector3.new(0, 500, 0))
-        
-        -- Sembunyikan bagian tubuh asli sepenuhnya
+        -- Ubah transparansi bagian tubuh agar tak terlihat player lain & diri sendiri
         for _, v in pairs(character:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") then
+            if v:IsA("BasePart") then
+                if v.Name ~= "HumanoidRootPart" then
+                    v.Transparency = 1
+                    v.CanCollide = false
+                end
+            elseif v:IsA("Decal") then
                 v.Transparency = 1
             elseif v:IsA("Accessory") then
-                local h = v:FindFirstChild("Handle")
-                if h then h.Transparency = 1 end
-            end
-        end
-
-        -- 3. PERBAIKAN UTAMA: Sinkronisasi posisi yang lebih stabil
-        renderConnection = RunService.RenderStepped:Connect(function()
-            if fakeCharacter and cloneRoot and cloneRoot.Parent and realRoot and realRoot.Parent then
-                -- Paksa badan asli di bawah mengikuti persis pergerakan klon di atas
-                realRoot.CFrame = cloneRoot.CFrame - Vector3.new(0, 500, 0)
-                realRoot.AssemblyLinearVelocity = cloneRoot.AssemblyLinearVelocity
-            end
-        end)
-
-    else
-        -- Matikan Invisibility
-        if renderConnection then
-            renderConnection:Disconnect()
-            renderConnection = nil
-        end
-
-        if fakeCharacter then
-            if cloneRoot and realRoot then
-                -- Munculkan kembali badan asli tepat di posisi terakhir klon berada
-                realRoot.CFrame = cloneRoot.CFrame + Vector3.new(0, 3, 0)
-            end
-            fakeCharacter:Destroy()
-            fakeCharacter = nil
-        end
-
-        if character then
-            workspace.CurrentCamera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
-            for _, v in pairs(character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.Transparency = 0
-                elseif v:IsA("Decal") then
-                    v.Transparency = 0
-                elseif v:IsA("Accessory") then
-                    local h = v:FindFirstChild("Handle")
-                    if h then h.Transparency = 0 end
+                local handle = v:FindFirstChild("Handle")
+                if handle then
+                    handle.Transparency = 1
+                    handle.CanCollide = false
                 end
             end
         end
+        
+        print("Invis: ON")
+    else
+        -- Matikan Invis / Kembali Normal
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            -- Reset karakter dengan mati/respawn atau mengembalikan properti
+            local currentPos = humanoidRootPart.CFrame
+            localPlayer.Character:BreakJoints() -- Opsi paling bersih untuk reset posisi dan badan normal kembali
+        end
+        print("Invis: OFF")
     end
 end
 
--- UI Menu Troller (Tetap Sama)
+-- Pembuatan UI Menu Troller
 local troller = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local nameofgui = Instance.new("TextLabel")
 local border = Instance.new("Frame")
-local invis = Instance.new("TextButton")
+local invisBtn = Instance.new("TextButton")
 local toggleUIBtn = Instance.new("TextButton")
 local memedog = Instance.new("TextLabel")
 local die = Instance.new("TextLabel")
@@ -143,27 +101,29 @@ border.BackgroundColor3 = Color3.new(1, 1, 1)
 border.Position = UDim2.new(0, 0, 0.09, 0)
 border.Size = UDim2.new(0, 248, 0, 1)
 
-invis.Name = "invis"
-invis.Parent = Main
-invis.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706)
-invis.Position = UDim2.new(0, 0, 0.15, 0)
-invis.Size = UDim2.new(0, 248, 0, 32)
-invis.Font = Enum.Font.SourceSansItalic
-invis.Text = "Invis: OFF"
-invis.TextColor3 = Color3.new(1, 1, 1)
-invis.TextSize = 16
+-- Tombol On/Off Invisibility
+invisBtn.Name = "invis"
+invisBtn.Parent = Main
+invisBtn.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706)
+invisBtn.Position = UDim2.new(0, 0, 0.15, 0)
+invisBtn.Size = UDim2.new(0, 248, 0, 32)
+invisBtn.Font = Enum.Font.SourceSansItalic
+invisBtn.Text = "Invis: OFF"
+invisBtn.TextColor3 = Color3.new(1, 1, 1)
+invisBtn.TextSize = 16
 
-invis.MouseButton1Click:Connect(function()
+invisBtn.MouseButton1Click:Connect(function()
     toggleInvisibility()
     if isInvisible then
-        invis.Text = "Invis: ON"
-        invis.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        invisBtn.Text = "Invis: ON"
+        invisBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Hijau
     else
-        invis.Text = "Invis: OFF"
-        invis.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706)
+        invisBtn.Text = "Invis: OFF"
+        invisBtn.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706) -- Oranye
     end
 end)
 
+-- Tombol UI ON / OFF
 toggleUIBtn.Name = "toggleUIBtn"
 toggleUIBtn.Parent = Main
 toggleUIBtn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
@@ -180,7 +140,7 @@ memedog.BackgroundTransparency = 1
 memedog.Position = UDim2.new(0.04, 0, 0.58, 0)
 memedog.Size = UDim2.new(0, 200, 0, 23)
 memedog.Font = Enum.Font.SourceSansLight
-memedog.Text = "Memedog#1256 for GUI"
+memedog.Text = "Weliton Style Fix"
 memedog.TextColor3 = Color3.new(0, 1, 0)
 memedog.TextSize = 14
 
@@ -190,7 +150,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Underground Clone + Gun Fix"
+die.Text = "Tool Desync Method"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
@@ -204,6 +164,7 @@ axy.Text = "Press ; to hide or show"
 axy.TextColor3 = Color3.new(1, 1, 0)
 axy.TextSize = 14
 
+-- Fitur Drag & Drop & Hide Menu
 local isHidden = false
 local mouse = localPlayer:GetMouse()
 
