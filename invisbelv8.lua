@@ -1,84 +1,110 @@
-local Players = game:GetService("Players")
+local Players = Service or game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Gaze R6 Void Asli (Badan masuk void, 100% Invisible)
+-- Konfigurasi Invisibility Ultimate Clone + Underground Sync
 local isInvisible = false
-local fakePart = nil
+local fakeCharacter = nil
+local realRoot = nil
+local cloneRoot = nil
 local renderConnection = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
-    local hrp0 = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
     
-    if not hrp0 or not humanoid then return end
+    if not humanoid or not rootPart then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        if humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-            warn("Metode Gaze R6 Void ini memerlukan avatar R6!")
+        realRoot = rootPart
+        local savedCFrame = realRoot.CFrame
+
+        -- 1. Buat klon karakter di atas sebagai visual & kontrol utama (bisa jalan, nembak, emote)
+        character.Archivable = true
+        fakeCharacter = character:Clone()
+        fakeCharacter.Name = "MovableInvisibleClone"
+        fakeCharacter.Parent = workspace
+        cloneRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
+
+        -- Hidupkan kembali script animasi di klon agar bisa bergerak normal
+        local animateScript = fakeCharacter:FindFirstChild("Animate")
+        if animateScript then animateScript.Disabled = false end
+
+        -- Atur transparansi klon (0.3 agar terlihat samar di layar kamu, atau ubah jadi 1 jika ingin tak terlihat total)
+        for _, v in pairs(fakeCharacter:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+                v.Transparency = 0.3
+            elseif v:IsA("Accessory") then
+                local h = v:FindFirstChild("Handle")
+                if h then h.Transparency = 0.3 end
+            end
         end
 
-        local hrp1 = hrp0:Clone()
-
-        -- Buat part pelacak posisi
-        fakePart = Instance.new("Part")
-        fakePart.Size = Vector3.new(0.5, 0.5, 0.5)
-        fakePart.Anchored = true
-        fakePart.CanCollide = false
-        fakePart.Transparency = 1
-        fakePart.Parent = workspace
-
-        -- Trik Gaze R6 Void
-        character.Parent = nil
-        hrp0.Parent = hrp1
-        if hrp0:FindFirstChild("RootJoint") then
-            hrp0.RootJoint.Part0 = nil
+        if cloneRoot then
+            cloneRoot.CFrame = savedCFrame
         end
-        hrp1.Parent = character
-        character.Parent = workspace
 
-        local animId = "rbxassetid://215384594"
-        local anim = Instance.new("Animation")
-        anim.AnimationId = animId
-        local animTrack = humanoid:LoadAnimation(anim)
+        -- Pindahkan fokus kamera ke klon
+        workspace.CurrentCamera.CameraSubject = fakeCharacter:FindFirstChildOfClass("Humanoid")
 
-        -- Sinkronisasi pergerakan ke void bawah tanah
+        -- 2. Teleport badan asli ke bawah tanah (Void) agar aman dan tidak terlihat player lain
+        realRoot.CFrame = CFrame.new(savedCFrame.Position - Vector3.new(0, 500, 0))
+        
+        -- Sembunyikan badan asli sepenuhnya
+        for _, v in pairs(character:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+                v.Transparency = 1
+            elseif v:IsA("Accessory") then
+                local h = v:FindFirstChild("Handle")
+                if h then h.Transparency = 1 end
+            end
+        end
+
+        -- 3. Sinkronisasi pergerakan badan asli di bawah mengikuti kemana pun klon di atas berjalan
         renderConnection = RunService.Heartbeat:Connect(function()
-            if character and character.Parent and hrp0 and hrp1 then
-                humanoid.HipHeight = 3
-                humanoid.JumpPower = 20
-                if not animTrack.IsPlaying then
-                    animTrack:Play()
-                    animTrack:AdjustSpeed(0)
-                    animTrack.TimePosition = 0.4
-                end
-                hrp0.CFrame = hrp1.CFrame 
-                hrp0.Orientation = Vector3.new(90, 0, 0)
-                hrp0.Position = hrp1.Position - Vector3.new(0, hrp0.Size.Y / 2, 0) 
-                hrp0.Velocity = hrp1.Velocity
-
-                fakePart.Position = hrp0.Position + Vector3.new(-0.05, 0, 2.45)
+            if fakeCharacter and cloneRoot and realRoot and realRoot.Parent then
+                realRoot.CFrame = cloneRoot.CFrame - Vector3.new(0, 500, 0)
+                realRoot.Velocity = cloneRoot.Velocity
             end
         end)
 
     else
+        -- Saat Invis OFF: Matikan koneksi sinkronisasi
         if renderConnection then
             renderConnection:Disconnect()
             renderConnection = nil
         end
 
-        if fakePart then
-            fakePart:Destroy()
-            fakePart = nil
+        -- Kembalikan posisi badan asli naik ke posisi terakhir klon di atas
+        if fakeCharacter and cloneRoot and realRoot then
+            realRoot.CFrame = cloneRoot.CFrame
         end
 
-        -- Respawn otomatis saat dimatikan agar kembali normal
-        localPlayer.Character:BreakJoints()
+        -- Hapus klon
+        if fakeCharacter then
+            fakeCharacter:Destroy()
+            fakeCharacter = nil
+        end
+
+        -- Kembalikan kamera dan kembalikan visibilitas badan asli
+        if character then
+            workspace.CurrentCamera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+            for _, v in pairs(character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Transparency = 0
+                elseif v:IsA("Decal") then
+                    v.Transparency = 0
+                elseif v:IsA("Accessory") then
+                    local h = v:FindFirstChild("Handle")
+                    if h then h.Transparency = 0 end
+                end
+            end
+        end
     end
 end
 
@@ -171,7 +197,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Gaze R6 Void Integrated"
+die.Text = "Clone + Underground Sync"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
