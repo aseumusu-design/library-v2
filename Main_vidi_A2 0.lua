@@ -1,61 +1,30 @@
--- Weliton Style Invisible Script (Clean & Fixed)
+-- Gabungan: UI Troller Custom Kamu + Core Invisible Pastebin Weliton
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
 local isInvisible = false
-local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-local backpack = localPlayer:WaitForChild("Backpack")
 
--- Fungsi utama Invisible (Metode Tool / Desync Server)
+-- Fungsi untuk menjalankan core invisible dari Pastebin Weliton
+local function triggerInvis()
+    pcall(function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/3Rnd9rHf"))()
+    end)
+end
+
 local function toggleInvisibility()
-    character = localPlayer.Character
-    if not character then return end
-    
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-
     isInvisible = not isInvisible
-
+    
     if isInvisible then
-        -- Simpan posisi terakhir sebelum invis
-        local savedCFrame = humanoidRootPart.CFrame
-
-        -- Cari tool di backpack untuk trik desync, atau gunakan metode drop/equip jika ada
-        local tool = character:FindFirstChildOfClass("Tool") or backpack:FindFirstChildOfClass("Tool")
-        if tool then
-            tool.Parent = character
-            task.wait()
-            tool.Parent = backpack
-        end
-
-        -- Ubah transparansi bagian tubuh agar tak terlihat player lain & diri sendiri
-        for _, v in pairs(character:GetDescendants()) do
-            if v:IsA("BasePart") then
-                if v.Name ~= "HumanoidRootPart" then
-                    v.Transparency = 1
-                    v.CanCollide = false
-                end
-            elseif v:IsA("Decal") then
-                v.Transparency = 1
-            elseif v:IsA("Accessory") then
-                local handle = v:FindFirstChild("Handle")
-                if handle then
-                    handle.Transparency = 1
-                    handle.CanCollide = false
-                end
-            end
-        end
-        
+        -- Jalankan skrip invisible dari pastebin
+        triggerInvis()
         print("Invis: ON")
     else
-        -- Matikan Invis / Kembali Normal
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            -- Reset karakter dengan mati/respawn atau mengembalikan properti
-            local currentPos = humanoidRootPart.CFrame
-            localPlayer.Character:BreakJoints() -- Opsi paling bersih untuk reset posisi dan badan normal kembali
+        -- Jika dimatikan, reset karakter agar kembali normal
+        local character = localPlayer.Character
+        if character then
+            character:BreakJoints() -- Respawn otomatis untuk mengembalikan karakter seperti semula
         end
         print("Invis: OFF")
     end
@@ -140,7 +109,7 @@ memedog.BackgroundTransparency = 1
 memedog.Position = UDim2.new(0.04, 0, 0.58, 0)
 memedog.Size = UDim2.new(0, 200, 0, 23)
 memedog.Font = Enum.Font.SourceSansLight
-memedog.Text = "Weliton Style Fix"
+memedog.Text = "Weliton Pastebin + UI"
 memedog.TextColor3 = Color3.new(0, 1, 0)
 memedog.TextSize = 14
 
@@ -150,7 +119,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Tool Desync Method"
+die.Text = "Custom Troller Menu"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
