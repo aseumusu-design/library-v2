@@ -3,90 +3,109 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Metode Gaze / Underground Clone Modern
+-- Konfigurasi Invisibility True Character Swap + Underground
 local isInvisible = false
 local fakeCharacter = nil
-local realRoot = nil
-local cloneRoot = nil
+local invisChair = nil
+local savedCFrame = nil
 local renderConnection = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
     local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     
-    if not humanoid or not rootPart then return end
+    if not rootPart or not humanoid or not torso then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        -- Simpan referensi root asli
-        realRoot = rootPart
-        local savedCFrame = realRoot.CFrame
+        savedCFrame = rootPart.CFrame
 
-        -- 1. Buat klon karakter di atas untuk visual, senjata, dan nembak
+        -- 1. Buat klon karakter di atas (Visual & Kontrol Utama)
         character.Archivable = true
         fakeCharacter = character:Clone()
-        fakeCharacter.Name = "VisualClone"
+        fakeCharacter.Name = "TrueFakeCharacter"
         fakeCharacter.Parent = workspace
-        cloneRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
 
-        -- Matikan local script pada klon agar tidak konflik
-        for _, v in pairs(fakeCharacter:GetChildren()) do
-            if v:IsA("LocalScript") then v.Disabled = true end
-        end
+        -- Pastikan klon memiliki Humanoid dan Animate aktif agar bisa jalan & emote
+        local fakeRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
+        local fakeHumanoid = fakeCharacter:FindFirstChildOfClass("Humanoid")
 
-        -- Buat klon transparan sepenuhnya (atau hilangkan transparansi agar tak terlihat musuh, tapi kelihatan sedikit di kamu)
-        for _, v in pairs(fakeCharacter:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") then
-                v.Transparency = 0.3 -- Bisa diatur ke 1 jika ingin benar-benar tak terlihat di layar sendiri juga
+        if fakeRoot and fakeHumanoid then
+            fakeRoot.CFrame = savedCFrame
+            
+            -- Set kamera ke klon
+            workspace.CurrentCamera.CameraSubject = fakeHumanoid
+
+            -- Pindahkan kontrol Player sepenuhnya ke klon
+            localPlayer.Character = fakeCharacter
+            
+            -- Transparansikan klon agar tidak terlihat (atau beri sedikit transparansi 0.5 jika ingin kelihatan samar)
+            for _, v in pairs(fakeCharacter:GetDescendants()) do
+                if v:IsA("BasePart") or v:IsA("Decal") then
+                    v.Transparency = 1 -- 1 agar tak terlihat musuh
+                elseif v:IsA("Accessory") then
+                    local h = v:FindFirstChild("Handle")
+                    if h then h.Transparency = 1 end
+                end
             end
         end
 
-        if cloneRoot then
-            cloneRoot.CFrame = savedCFrame
-        end
-        workspace.CurrentCamera.CameraSubject = fakeCharacter:FindFirstChildOfClass("Humanoid")
+        -- 2. Amankan badan asli ke bawah tanah (Void) menggunakan kursi tak kasat mata agar aman dari deteksi FE
+        character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
+        task.wait(0.15)
 
-        -- 2. Pindahkan karakter asli ke bawah tanah (Void) agar aman dari deteksi server/player lain
-        realRoot.CFrame = CFrame.new(savedCFrame.Position - Vector3.new(0, 500, 0))
-        
-        -- Sembunyikan bagian tubuh asli
+        invisChair = Instance.new("Seat")
+        invisChair.Name = "invischair"
+        invisChair.Anchored = false
+        invisChair.CanCollide = false
+        invisChair.Transparency = 1
+        invisChair.Position = Vector3.new(-25.95, -500, 3537.55)
+        invisChair.Parent = workspace
+
+        local weld = Instance.new("Weld")
+        weld.Part0 = invisChair
+        weld.Part1 = torso
+        weld.Parent = invisChair
+
+        task.wait()
+        invisChair.CFrame = savedCFrame
+
+        -- Sembunyikan badan asli
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 v.Transparency = 1
-            elseif v:IsA("Accessory") then
-                local h = v:FindFirstChild("Handle")
-                if h then h.Transparency = 1 end
             end
         end
 
-        -- 3. Sinkronisasi posisi agar badan asli di bawah mengikuti gerakan klon di atas secara akurat
+        -- 3. Sinkronisasi posisi badan asli di bawah mengikuti posisi klon yang kamu gerakkan
         renderConnection = RunService.Heartbeat:Connect(function()
-            if fakeCharacter and cloneRoot and realRoot and realRoot.Parent then
-                realRoot.CFrame = cloneRoot.CFrame + Vector3.new(0, -500, 0)
-                realRoot.Velocity = cloneRoot.Velocity
+            if fakeRoot and rootPart and invisChair and invisChair.Parent then
+                invisChair.CFrame = fakeRoot.CFrame
+                rootPart.Velocity = fakeRoot.Velocity
             end
         end)
 
     else
-        -- Matikan Invisibility / Kembali Normal
+        -- Matikan Invisibility / Normal Kembali
         if renderConnection then
             renderConnection:Disconnect()
             renderConnection = nil
         end
 
-        if fakeCharacter then
-            if cloneRoot and realRoot then
-                realRoot.CFrame = cloneRoot.CFrame
-            end
-            fakeCharacter:Destroy()
-            fakeCharacter = nil
+        if invisChair then
+            invisChair:Destroy()
+            invisChair = nil
         end
 
+        -- Kembalikan kontrol ke karakter asli
         if character then
-            workspace.CurrentCamera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+            localPlayer.Character = character
+            workspace.CurrentCamera.CameraSubject = humanoid
+
             for _, v in pairs(character:GetDescendants()) do
                 if v:IsA("BasePart") then
                     v.Transparency = 0
@@ -97,6 +116,15 @@ local function toggleInvisibility()
                     if h then h.Transparency = 0 end
                 end
             end
+
+            if savedCFrame and rootPart then
+                rootPart.CFrame = savedCFrame
+            end
+        end
+
+        if fakeCharacter then
+            fakeCharacter:Destroy()
+            fakeCharacter = nil
         end
     end
 end
@@ -163,7 +191,7 @@ invis.MouseButton1Click:Connect(function()
     end
 end)
 
--- Tombol UI ON / OFF (Menu Utama Sembunyi/Muncul) - AMAN TIDAK AKAN HILANG
+-- Tombol UI ON / OFF (Menu Utama Sembunyi/Muncul) - AMAN TIDAK HILANG
 toggleUIBtn.Name = "toggleUIBtn"
 toggleUIBtn.Parent = Main
 toggleUIBtn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
@@ -190,7 +218,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Underground Clone + Gun Fix"
+die.Text = "True Movable Invis"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
