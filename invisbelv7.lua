@@ -3,97 +3,86 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Ultimate Seat Underground (Stabil & Tidak Hancur)
+-- Konfigurasi Invisibility Gaze R6 Void Asli (Badan masuk void, 100% Invisible)
 local isInvisible = false
-local invisChair = nil
-local savedCFrame = nil
+local fakePart = nil
+local renderConnection = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    local hrp0 = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     
-    if not rootPart or not torso then return end
+    if not hrp0 or not humanoid then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        savedCFrame = rootPart.CFrame
-
-        -- 1. Pindahkan karakter jauh ke bawah tanah untuk bypass deteksi server (FE)
-        character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
-        task.wait(0.15)
-
-        -- 2. Buat kursi tak kasat mata di posisi asli untuk mengunci posisi badan
-        invisChair = Instance.new("Seat")
-        invisChair.Name = "invischair"
-        invisChair.Anchored = false
-        invisChair.CanCollide = false
-        invisChair.Transparency = 1
-        invisChair.Position = Vector3.new(-25.95, -500, 3537.55)
-        invisChair.Parent = workspace
-
-        local weld = Instance.new("Weld")
-        weld.Part0 = invisChair
-        weld.Part1 = torso
-        weld.Parent = invisChair
-
-        task.wait()
-        invisChair.CFrame = savedCFrame
-
-        -- 3. Sembunyikan seluruh tubuh dan aksesoris agar tak terlihat sama sekali oleh player lain
-        for _, v in pairs(character:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.Transparency = 1
-                v.CanCollide = false
-            elseif v:IsA("Decal") then
-                v.Transparency = 1
-            elseif v:IsA("Accessory") then
-                local handle = v:FindFirstChild("Handle")
-                if handle then
-                    handle.Transparency = 1
-                    handle.CanCollide = false
-                end
-            end
+        if humanoid.RigType ~= Enum.HumanoidRigType.R6 then
+            warn("Metode Gaze R6 Void ini memerlukan avatar R6!")
         end
-        
-        -- Pastikan HumanoidRootPart tetap non-kolisi agar bisa berjalan menembus objek
-        rootPart.CanCollide = false
+
+        local hrp1 = hrp0:Clone()
+
+        -- Buat part pelacak posisi
+        fakePart = Instance.new("Part")
+        fakePart.Size = Vector3.new(0.5, 0.5, 0.5)
+        fakePart.Anchored = true
+        fakePart.CanCollide = false
+        fakePart.Transparency = 1
+        fakePart.Parent = workspace
+
+        -- Trik Gaze R6 Void
+        character.Parent = nil
+        hrp0.Parent = hrp1
+        if hrp0:FindFirstChild("RootJoint") then
+            hrp0.RootJoint.Part0 = nil
+        end
+        hrp1.Parent = character
+        character.Parent = workspace
+
+        local animId = "rbxassetid://215384594"
+        local anim = Instance.new("Animation")
+        anim.AnimationId = animId
+        local animTrack = humanoid:LoadAnimation(anim)
+
+        -- Sinkronisasi pergerakan ke void bawah tanah
+        renderConnection = RunService.Heartbeat:Connect(function()
+            if character and character.Parent and hrp0 and hrp1 then
+                humanoid.HipHeight = 3
+                humanoid.JumpPower = 20
+                if not animTrack.IsPlaying then
+                    animTrack:Play()
+                    animTrack:AdjustSpeed(0)
+                    animTrack.TimePosition = 0.4
+                end
+                hrp0.CFrame = hrp1.CFrame 
+                hrp0.Orientation = Vector3.new(90, 0, 0)
+                hrp0.Position = hrp1.Position - Vector3.new(0, hrp0.Size.Y / 2, 0) 
+                hrp0.Velocity = hrp1.Velocity
+
+                fakePart.Position = hrp0.Position + Vector3.new(-0.05, 0, 2.45)
+            end
+        end)
 
     else
-        -- Matikan Invisibility / Kembali Normal
-        if invisChair then
-            invisChair:Destroy()
-            invisChair = nil
+        if renderConnection then
+            renderConnection:Disconnect()
+            renderConnection = nil
         end
 
-        if character then
-            for _, v in pairs(character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.Transparency = 0
-                    if v.Name ~= "HumanoidRootPart" then
-                        v.CanCollide = true
-                    end
-                elseif v:IsA("Decal") then
-                    v.Transparency = 0
-                elseif v:IsA("Accessory") then
-                    local handle = v:FindFirstChild("Handle")
-                    if handle then
-                        handle.Transparency = 0
-                        handle.CanCollide = true
-                    end
-                end
-            end
-
-            if savedCFrame and rootPart then
-                rootPart.CFrame = savedCFrame
-            end
+        if fakePart then
+            fakePart:Destroy()
+            fakePart = nil
         end
+
+        -- Respawn otomatis saat dimatikan agar kembali normal
+        localPlayer.Character:BreakJoints()
     end
 end
 
--- Pembuatan UI Menu Troller
+-- Pembuatan UI Menu Troller Lengkap
 local troller = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local nameofgui = Instance.new("TextLabel")
@@ -182,7 +171,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Stable Underground Fix"
+die.Text = "Gaze R6 Void Integrated"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
