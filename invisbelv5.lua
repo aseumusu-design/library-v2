@@ -3,9 +3,8 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility True Character Swap + Underground
+-- Konfigurasi Invisibility Ultimate Bypass
 local isInvisible = false
-local fakeCharacter = nil
 local invisChair = nil
 local savedCFrame = nil
 local renderConnection = nil
@@ -14,47 +13,16 @@ local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
     local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     
-    if not rootPart or not humanoid or not torso then return end
+    if not rootPart or not torso then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
         savedCFrame = rootPart.CFrame
 
-        -- 1. Buat klon karakter di atas (Visual & Kontrol Utama)
-        character.Archivable = true
-        fakeCharacter = character:Clone()
-        fakeCharacter.Name = "TrueFakeCharacter"
-        fakeCharacter.Parent = workspace
-
-        -- Pastikan klon memiliki Humanoid dan Animate aktif agar bisa jalan & emote
-        local fakeRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
-        local fakeHumanoid = fakeCharacter:FindFirstChildOfClass("Humanoid")
-
-        if fakeRoot and fakeHumanoid then
-            fakeRoot.CFrame = savedCFrame
-            
-            -- Set kamera ke klon
-            workspace.CurrentCamera.CameraSubject = fakeHumanoid
-
-            -- Pindahkan kontrol Player sepenuhnya ke klon
-            localPlayer.Character = fakeCharacter
-            
-            -- Transparansikan klon agar tidak terlihat (atau beri sedikit transparansi 0.5 jika ingin kelihatan samar)
-            for _, v in pairs(fakeCharacter:GetDescendants()) do
-                if v:IsA("BasePart") or v:IsA("Decal") then
-                    v.Transparency = 1 -- 1 agar tak terlihat musuh
-                elseif v:IsA("Accessory") then
-                    local h = v:FindFirstChild("Handle")
-                    if h then h.Transparency = 1 end
-                end
-            end
-        end
-
-        -- 2. Amankan badan asli ke bawah tanah (Void) menggunakan kursi tak kasat mata agar aman dari deteksi FE
+        -- 1. Amankan karakter asli ke bawah tanah (Void) menggunakan kursi tak kasat mata (Bypass FE)
         character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
         task.wait(0.15)
 
@@ -74,40 +42,26 @@ local function toggleInvisibility()
         task.wait()
         invisChair.CFrame = savedCFrame
 
-        -- Sembunyikan badan asli
+        -- 2. Buat seluruh bagian tubuh asli transparan 100% (Tak terlihat di layar player lain maupun layar kamu)
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 v.Transparency = 1
+            elseif v:IsA("Accessory") then
+                local h = v:FindFirstChild("Handle")
+                if h then h.Transparency = 1 end
             end
         end
-
-        -- 3. Sinkronisasi posisi badan asli di bawah mengikuti posisi klon yang kamu gerakkan
-        renderConnection = RunService.Heartbeat:Connect(function()
-            if fakeRoot and rootPart and invisChair and invisChair.Parent then
-                invisChair.CFrame = fakeRoot.CFrame
-                rootPart.Velocity = fakeRoot.Velocity
-            end
-        end)
 
     else
-        -- Matikan Invisibility / Normal Kembali
-        if renderConnection then
-            renderConnection:Disconnect()
-            renderConnection = nil
-        end
-
+        -- Matikan Invisibility / Kembali Normal
         if invisChair then
             invisChair:Destroy()
             invisChair = nil
         end
 
-        -- Kembalikan kontrol ke karakter asli
         if character then
-            localPlayer.Character = character
-            workspace.CurrentCamera.CameraSubject = humanoid
-
             for _, v in pairs(character:GetDescendants()) do
-                if v:IsA("BasePart") then
+                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
                     v.Transparency = 0
                 elseif v:IsA("Decal") then
                     v.Transparency = 0
@@ -116,15 +70,9 @@ local function toggleInvisibility()
                     if h then h.Transparency = 0 end
                 end
             end
-
             if savedCFrame and rootPart then
                 rootPart.CFrame = savedCFrame
             end
-        end
-
-        if fakeCharacter then
-            fakeCharacter:Destroy()
-            fakeCharacter = nil
         end
     end
 end
@@ -218,7 +166,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "True Movable Invis"
+die.Text = "Ultimate Working Invis"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
