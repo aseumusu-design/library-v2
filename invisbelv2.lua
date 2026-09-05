@@ -3,10 +3,12 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility (Metode Seat Trick Modern)
+-- Konfigurasi Invisibility Modern (Clone + Seat Underground Bypass)
 local isInvisible = false
 local invisChair = nil
+local fakeCharacter = nil
 local savedCFrame = nil
+local renderConnection = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
@@ -21,8 +23,29 @@ local function toggleInvisibility()
     if isInvisible then
         savedCFrame = rootPart.CFrame
 
-        -- Pindahkan karakter ke koordinat jauh untuk bypass FE
-        character:MoveTo(Vector3.new(-25.95, 84, 3537.55))
+        -- 1. Buat Clone karakter di atas (sebagai replika visual/bisa nembak & bergerak normal)
+        character.Archivable = true
+        fakeCharacter = character:Clone()
+        fakeCharacter.Name = "VisualClone"
+        fakeCharacter.Parent = workspace
+        
+        -- Matikan local script di clone agar tidak error
+        for _, v in pairs(fakeCharacter:GetChildren()) do
+            if v:IsA("LocalScript") then v.Disabled = true end
+        end
+
+        -- Atur transparansi visual clone agak samar atau transparan sesuai keinginan
+        for _, v in pairs(fakeCharacter:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+                v.Transparency = 0.5
+            end
+        end
+
+        fakeCharacter.HumanoidRootPart.CFrame = savedCFrame
+        workspace.CurrentCamera.CameraSubject = fakeCharacter.Humanoid
+
+        -- 2. Amankan badan asli ke bawah tanah menggunakan kursi tak kasat mata (Bypass FE)
+        character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
         task.wait(0.15)
 
         invisChair = Instance.new("Seat")
@@ -30,7 +53,7 @@ local function toggleInvisibility()
         invisChair.Anchored = false
         invisChair.CanCollide = false
         invisChair.Transparency = 1
-        invisChair.Position = Vector3.new(-25.95, 84, 3537.55)
+        invisChair.Position = Vector3.new(-25.95, -500, 3537.55)
         invisChair.Parent = workspace
 
         local weld = Instance.new("Weld")
@@ -40,35 +63,51 @@ local function toggleInvisibility()
 
         task.wait()
         invisChair.CFrame = savedCFrame
-        
-        -- Sembunyikan seluruh tubuh dan aksesoris agar 100% tak terlihat
+
+        -- Sembunyikan badan asli sepenuhnya
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 v.Transparency = 1
             elseif v:IsA("Accessory") then
-                local handle = v:FindFirstChild("Handle")
-                if handle then
-                    handle.Transparency = 1
-                end
+                local h = v:FindFirstChild("Handle")
+                if h then h.Transparency = 1 end
             end
         end
+
+        -- Sinkronisasi pergerakan klon dengan badan asli di bawah
+        renderConnection = RunService.Heartbeat:Connect(function()
+            if fakeCharacter and fakeCharacter:FindFirstChild("HumanoidRootPart") and invisChair then
+                invisChair.CFrame = fakeCharacter.HumanoidRootPart.CFrame
+            end
+        end)
+
     else
+        -- Matikan Invisibility / Normal Kembali
+        if renderConnection then
+            renderConnection:Disconnect()
+            renderConnection = nil
+        end
+
+        if fakeCharacter then
+            fakeCharacter:Destroy()
+            fakeCharacter = nil
+        end
+
         if invisChair then
             invisChair:Destroy()
             invisChair = nil
         end
 
         if character then
+            workspace.CurrentCamera.CameraSubject = character:FindFirstChild("Humanoid")
             for _, v in pairs(character:GetDescendants()) do
                 if v:IsA("BasePart") then
                     v.Transparency = 0
                 elseif v:IsA("Decal") then
                     v.Transparency = 0
                 elseif v:IsA("Accessory") then
-                    local handle = v:FindFirstChild("Handle")
-                    if handle then
-                        handle.Transparency = 0
-                    end
+                    local h = v:FindFirstChild("Handle")
+                    if h then h.Transparency = 0 end
                 end
             end
             if savedCFrame and rootPart then
@@ -78,7 +117,7 @@ local function toggleInvisibility()
     end
 end
 
--- Pembuatan UI Menu Troller
+-- Pembuatan UI Menu Troller Lengkap
 local troller = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local nameofgui = Instance.new("TextLabel")
@@ -140,7 +179,7 @@ invis.MouseButton1Click:Connect(function()
     end
 end)
 
--- Tombol UI ON / OFF (Menu Utama Sembunyi/Muncul)
+-- Tombol UI ON / OFF (Menu Utama Sembunyi/Muncul) - AMAN TIDAK AKAN HILANG
 toggleUIBtn.Name = "toggleUIBtn"
 toggleUIBtn.Parent = Main
 toggleUIBtn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
@@ -167,7 +206,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Modern FE Seat Bypass"
+die.Text = "Ultimate Clone + Underground"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
@@ -199,7 +238,6 @@ end
 
 Draggable(Main)
 
--- Fungsi Toggle Sembunyikan / Munculkan Menu
 local function toggleMenu()
     if isHidden == false then
         Main:TweenPosition(Main.Position - UDim2.new(0, 0, 1, 0), "Out", "Quad", 0.4, false)
