@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Method (Seat Teleport Trick)
+-- Konfigurasi Invisibility menggunakan Seat Trick
 local isInvisible = false
 local invisChair = nil
 local savedCFrame = nil
@@ -19,14 +19,14 @@ local function toggleInvisibility()
     isInvisible = not isInvisible
 
     if isInvisible then
-        -- Simpan posisi awal
+        -- Simpan posisi awal pemain
         savedCFrame = rootPart.CFrame
 
-        -- Teleport jauh ke luar map agar tidak direplikasi normal oleh server
+        -- Teleport karakter jauh ke koordinat tersembunyi sesuai sumber open source
         character:MoveTo(Vector3.new(-25.95, 84, 3537.55))
         task.wait(0.15)
 
-        -- Buat kursi transparan (Seat trick untuk bypass FE)
+        -- Buat kursi transparan untuk bypass FE
         invisChair = Instance.new("Seat")
         invisChair.Name = "invischair"
         invisChair.Anchored = false
@@ -43,14 +43,19 @@ local function toggleInvisibility()
         task.wait()
         invisChair.CFrame = savedCFrame
         
-        -- Hilangkan transparansi/buat badan asli tidak terlihat sepenuhnya
+        -- Ubah transparansi seluruh bagian tubuh dan aksesoris menjadi 1 (100% tak terlihat)
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 v.Transparency = 1
+            elseif v:IsA("Accessory") then
+                local handle = v:FindFirstChild("Handle")
+                if handle then
+                    handle.Transparency = 1
+                end
             end
         end
     else
-        -- Matikan invis / kembali normal
+        -- Matikan invis / kembalikan seperti semula
         if invisChair then
             invisChair:Destroy()
             invisChair = nil
@@ -62,6 +67,11 @@ local function toggleInvisibility()
                     v.Transparency = 0
                 elseif v:IsA("Decal") then
                     v.Transparency = 0
+                elseif v:IsA("Accessory") then
+                    local handle = v:FindFirstChild("Handle")
+                    if handle then
+                        handle.Transparency = 0
+                    end
                 end
             end
             if savedCFrame and rootPart then
@@ -126,10 +136,10 @@ invis.MouseButton1Click:Connect(function()
     toggleInvisibility()
     if isInvisible then
         invis.Text = "Invis: ON"
-        invis.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Hijau
+        invis.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
     else
         invis.Text = "Invis: OFF"
-        invis.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706) -- Oranye
+        invis.BackgroundColor3 = Color3.new(1, 0.541176, 0.164706)
     end
 end)
 
@@ -204,7 +214,7 @@ mouse.KeyDown:Connect(function(key)
     end
 end)
 
-toggleUIBtn.MouseButton1Click:Connect(function()
+toggleUIBtn.MouseButton1Click:Connect(function`()
     if isHidden == false then
         Main:TweenPosition(Main.Position - UDim2.new(0, 0, 1, 0), "Out", "Quad", 0.4, false)
         isHidden = true
