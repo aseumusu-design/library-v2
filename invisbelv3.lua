@@ -3,68 +3,56 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Modern (Clone + Seat Underground Bypass)
+-- Konfigurasi Invisibility Metode Gaze / Underground Clone Modern
 local isInvisible = false
-local invisChair = nil
 local fakeCharacter = nil
-local savedCFrame = nil
+local realRoot = nil
+local cloneRoot = nil
 local renderConnection = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     local rootPart = character:FindFirstChild("HumanoidRootPart")
-    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     
-    if not rootPart or not torso then return end
+    if not humanoid or not rootPart then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        savedCFrame = rootPart.CFrame
+        -- Simpan referensi root asli
+        realRoot = rootPart
+        local savedCFrame = realRoot.CFrame
 
-        -- 1. Buat Clone karakter di atas (sebagai replika visual/bisa nembak & bergerak normal)
+        -- 1. Buat klon karakter di atas untuk visual, senjata, dan nembak
         character.Archivable = true
         fakeCharacter = character:Clone()
         fakeCharacter.Name = "VisualClone"
         fakeCharacter.Parent = workspace
-        
-        -- Matikan local script di clone agar tidak error
+        cloneRoot = fakeCharacter:FindFirstChild("HumanoidRootPart")
+
+        -- Matikan local script pada klon agar tidak konflik
         for _, v in pairs(fakeCharacter:GetChildren()) do
             if v:IsA("LocalScript") then v.Disabled = true end
         end
 
-        -- Atur transparansi visual clone agak samar atau transparan sesuai keinginan
+        -- Buat klon transparan sepenuhnya (atau hilangkan transparansi agar tak terlihat musuh, tapi kelihatan sedikit di kamu)
         for _, v in pairs(fakeCharacter:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
-                v.Transparency = 0.5
+                v.Transparency = 0.3 -- Bisa diatur ke 1 jika ingin benar-benar tak terlihat di layar sendiri juga
             end
         end
 
-        fakeCharacter.HumanoidRootPart.CFrame = savedCFrame
-        workspace.CurrentCamera.CameraSubject = fakeCharacter.Humanoid
+        if cloneRoot then
+            cloneRoot.CFrame = savedCFrame
+        end
+        workspace.CurrentCamera.CameraSubject = fakeCharacter:FindFirstChildOfClass("Humanoid")
 
-        -- 2. Amankan badan asli ke bawah tanah menggunakan kursi tak kasat mata (Bypass FE)
-        character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
-        task.wait(0.15)
-
-        invisChair = Instance.new("Seat")
-        invisChair.Name = "invischair"
-        invisChair.Anchored = false
-        invisChair.CanCollide = false
-        invisChair.Transparency = 1
-        invisChair.Position = Vector3.new(-25.95, -500, 3537.55)
-        invisChair.Parent = workspace
-
-        local weld = Instance.new("Weld")
-        weld.Part0 = invisChair
-        weld.Part1 = torso
-        weld.Parent = invisChair
-
-        task.wait()
-        invisChair.CFrame = savedCFrame
-
-        -- Sembunyikan badan asli sepenuhnya
+        -- 2. Pindahkan karakter asli ke bawah tanah (Void) agar aman dari deteksi server/player lain
+        realRoot.CFrame = CFrame.new(savedCFrame.Position - Vector3.new(0, 500, 0))
+        
+        -- Sembunyikan bagian tubuh asli
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 v.Transparency = 1
@@ -74,32 +62,31 @@ local function toggleInvisibility()
             end
         end
 
-        -- Sinkronisasi pergerakan klon dengan badan asli di bawah
+        -- 3. Sinkronisasi posisi agar badan asli di bawah mengikuti gerakan klon di atas secara akurat
         renderConnection = RunService.Heartbeat:Connect(function()
-            if fakeCharacter and fakeCharacter:FindFirstChild("HumanoidRootPart") and invisChair then
-                invisChair.CFrame = fakeCharacter.HumanoidRootPart.CFrame
+            if fakeCharacter and cloneRoot and realRoot and realRoot.Parent then
+                realRoot.CFrame = cloneRoot.CFrame + Vector3.new(0, -500, 0)
+                realRoot.Velocity = cloneRoot.Velocity
             end
         end)
 
     else
-        -- Matikan Invisibility / Normal Kembali
+        -- Matikan Invisibility / Kembali Normal
         if renderConnection then
             renderConnection:Disconnect()
             renderConnection = nil
         end
 
         if fakeCharacter then
+            if cloneRoot and realRoot then
+                realRoot.CFrame = cloneRoot.CFrame
+            end
             fakeCharacter:Destroy()
             fakeCharacter = nil
         end
 
-        if invisChair then
-            invisChair:Destroy()
-            invisChair = nil
-        end
-
         if character then
-            workspace.CurrentCamera.CameraSubject = character:FindFirstChild("Humanoid")
+            workspace.CurrentCamera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
             for _, v in pairs(character:GetDescendants()) do
                 if v:IsA("BasePart") then
                     v.Transparency = 0
@@ -110,14 +97,11 @@ local function toggleInvisibility()
                     if h then h.Transparency = 0 end
                 end
             end
-            if savedCFrame and rootPart then
-                rootPart.CFrame = savedCFrame
-            end
         end
     end
 end
 
--- Pembuatan UI Menu Troller Lengkap
+-- Pembuatan UI Menu Troller
 local troller = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local nameofgui = Instance.new("TextLabel")
@@ -206,7 +190,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Ultimate Clone + Underground"
+die.Text = "Underground Clone + Gun Fix"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
