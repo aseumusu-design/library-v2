@@ -3,84 +3,93 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Konfigurasi Invisibility Gaze R6 Void (Bisa Jalan, Nembak, Emote, 100% Invisible)
+-- Konfigurasi Invisibility Ultimate Seat Underground (Stabil & Tidak Hancur)
 local isInvisible = false
-local fakePart = nil
-local renderConnection = nil
+local invisChair = nil
+local savedCFrame = nil
 
 local function toggleInvisibility()
     local character = localPlayer.Character
     if not character then return end
-    local hrp0 = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     
-    if not hrp0 or not humanoid then return end
+    if not rootPart or not torso then return end
 
     isInvisible = not isInvisible
 
     if isInvisible then
-        -- Pastikan rig R6 (kalau R15 sebagian game tidak mendukung metode void penuh)
-        if humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-            warn("Metode ini khusus untuk R6 agar berjalan sempurna!")
-        end
+        savedCFrame = rootPart.CFrame
 
-        local hrp1 = hrp0:Clone()
+        -- 1. Pindahkan karakter jauh ke bawah tanah untuk bypass deteksi server (FE)
+        character:MoveTo(Vector3.new(-25.95, -500, 3537.55))
+        task.wait(0.15)
 
-        -- Buat part indikator kecil di atas (opsional/bisa transparan)
-        fakePart = Instance.new("Part")
-        fakePart.Size = Vector3.new(0.5, 0.5, 0.5)
-        fakePart.Anchored = true
-        fakePart.CanCollide = false
-        fakePart.Transparency = 1
-        fakePart.Parent = workspace
+        -- 2. Buat kursi tak kasat mata di posisi asli untuk mengunci posisi badan
+        invisChair = Instance.new("Seat")
+        invisChair.Name = "invischair"
+        invisChair.Anchored = false
+        invisChair.CanCollide = false
+        invisChair.Transparency = 1
+        invisChair.Position = Vector3.new(-25.95, -500, 3537.55)
+        invisChair.Parent = workspace
 
-        -- Trik Gaze Void R6
-        character.Parent = nil
-        hrp0.Parent = hrp1
-        if hrp0:FindFirstChild("RootJoint") then
-            hrp0.RootJoint.Part0 = nil
-        end
-        hrp1.Parent = character
-        character.Parent = workspace
+        local weld = Instance.new("Weld")
+        weld.Part0 = invisChair
+        weld.Part1 = torso
+        weld.Parent = invisChair
 
-        local animId = "rbxassetid://215384594"
-        local anim = Instance.new("Animation")
-        anim.AnimationId = animId
-        local animTrack = humanoid:LoadAnimation(anim)
+        task.wait()
+        invisChair.CFrame = savedCFrame
 
-        -- Sinkronisasi pergerakan dan posisi void ke bawah tanah
-        renderConnection = RunService.Heartbeat:Connect(function()
-            if character and character.Parent and hrp0 and hrp1 then
-                humanoid.HipHeight = 3
-                humanoid.JumpPower = 20
-                if not animTrack.IsPlaying then
-                    animTrack:Play()
-                    animTrack:AdjustSpeed(0)
-                    animTrack.TimePosition = 0.4
+        -- 3. Sembunyikan seluruh tubuh dan aksesoris agar tak terlihat sama sekali oleh player lain
+        for _, v in pairs(character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Transparency = 1
+                v.CanCollide = false
+            elseif v:IsA("Decal") then
+                v.Transparency = 1
+            elseif v:IsA("Accessory") then
+                local handle = v:FindFirstChild("Handle")
+                if handle then
+                    handle.Transparency = 1
+                    handle.CanCollide = false
                 end
-                hrp0.CFrame = hrp1.CFrame 
-                hrp0.Orientation = Vector3.new(90, 0, 0)
-                hrp0.Position = hrp1.Position - Vector3.new(0, hrp0.Size.Y / 2, 0) 
-                hrp0.Velocity = hrp1.Velocity
-
-                fakePart.Position = hrp0.Position + Vector3.new(-0.05, 0, 2.45)
             end
-        end)
+        end
+        
+        -- Pastikan HumanoidRootPart tetap non-kolisi agar bisa berjalan menembus objek
+        rootPart.CanCollide = false
 
     else
         -- Matikan Invisibility / Kembali Normal
-        if renderConnection then
-            renderConnection:Disconnect()
-            renderConnection = nil
+        if invisChair then
+            invisChair:Destroy()
+            invisChair = nil
         end
 
-        if fakePart then
-            fakePart:Destroy()
-            fakePart = nil
-        end
+        if character then
+            for _, v in pairs(character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Transparency = 0
+                    if v.Name ~= "HumanoidRootPart" then
+                        v.CanCollide = true
+                    end
+                elseif v:IsA("Decal") then
+                    v.Transparency = 0
+                elseif v:IsA("Accessory") then
+                    local handle = v:FindFirstChild("Handle")
+                    if handle then
+                        handle.Transparency = 0
+                        handle.CanCollide = true
+                    end
+                end
+            end
 
-        -- Paksa respawn/reload karakter agar kembali normal
-        localPlayer.Character:BreakJoints()
+            if savedCFrame and rootPart then
+                rootPart.CFrame = savedCFrame
+            end
+        end
     end
 end
 
@@ -173,7 +182,7 @@ die.BackgroundTransparency = 1
 die.Position = UDim2.new(0.01, 0, 0.72, 0)
 die.Size = UDim2.new(0, 246, 0, 23)
 die.Font = Enum.Font.SourceSansLight
-die.Text = "Gaze R6 Void Perfect"
+die.Text = "Stable Underground Fix"
 die.TextColor3 = Color3.new(0, 1, 1)
 die.TextSize = 14
 
